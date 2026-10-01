@@ -14,7 +14,7 @@ const CAMPOS = [
   { name: 'imagen_url', label: 'Imagen', type: 'file' },
 ];
 
-export default function AboutEditor() {
+export default function AboutEditor({ canEdit=true }) {
   const [form, setForm] = useState({ titulo: '', subtitulo: '', mision: '', vision: '', valores: '', imagen_url: '' });
   const [estado, setEstado] = useState('cargando');
   const [guardando, setGuardando] = useState(false);
@@ -31,6 +31,7 @@ export default function AboutEditor() {
 
   const guardar = async (e) => {
     e.preventDefault();
+    if (!canEdit) return;
     setGuardando(true); setError(''); setOk(false);
     try { await saveAbout(form); setOk(true); }
     catch (err) { setError(err.message); }
@@ -48,17 +49,17 @@ export default function AboutEditor() {
           {CAMPOS.map((f) => (
             <div key={f.name}>
               {f.type === 'file' ? (
-                <FileField label={f.label} value={form[f.name]} onChange={(v) => set(f.name, v)} />
+                canEdit ? <FileField label={f.label} value={form[f.name]} onChange={(v) => set(f.name, v)} /> : <div className="rounded-xl border border-line bg-slate-50 px-3 py-2.5 text-sm text-slate-500">{form[f.name] ? 'Imagen registrada' : 'Sin imagen'}</div>
               ) : f.type === 'textarea' ? (
                 <>
                   <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-400">{f.label}</label>
-                  <textarea rows={3} value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
+                  <textarea rows={3} disabled={!canEdit} value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
                     className="w-full resize-none rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400" />
                 </>
               ) : (
                 <>
                   <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-400">{f.label}</label>
-                  <input value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
+                  <input disabled={!canEdit} value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
                     className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400" />
                 </>
               )}
@@ -66,10 +67,10 @@ export default function AboutEditor() {
           ))}
         </div>
         <div className="mt-5 flex items-center gap-3">
-          <button type="submit" disabled={guardando}
+          {canEdit && <button type="submit" disabled={guardando}
             className="btn-shine inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-400 px-6 py-3 text-sm font-600 text-white hover:-translate-y-0.5 disabled:opacity-60">
             {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Guardar
-          </button>
+          </button>}
           {ok && <span className="inline-flex items-center gap-1.5 text-sm text-emerald-300"><CheckCircle2 size={16} /> Guardado</span>}
         </div>
       </form>

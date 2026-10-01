@@ -1,20 +1,19 @@
 // frontend/src/components/ContactModal.jsx
 import { useEffect, useState } from 'react';
 import { X, Send, CheckCircle2, Loader2, Mail, Phone, MapPin } from 'lucide-react';
-import { enviarContacto } from '../lib/api.js';
+import { enviarContacto, getPortada } from '../lib/api.js';
 import Portal from './ui/Portal.jsx';
 
 const INICIAL = { nombre: '', correo: '', telefono: '', asunto: '', mensaje: '' };
-const DATOS = [
-  { icon: Mail, valor: 'contacto@riaaeb.org' },
-  { icon: Phone, valor: '+52 747 000 0000' },
-  { icon: MapPin, valor: 'Chilpancingo, Guerrero, México' },
-];
+const CONTACTO_DEFAULT={contacto_correo:'contacto@riaaeb.org',contacto_telefono:'+52 747 000 0000',contacto_ubicacion:'Chilpancingo, Guerrero, México'};
 
 export default function ContactModal({ open, onClose }) {
   const [form, setForm] = useState(INICIAL);
   const [estado, setEstado] = useState('idle');
   const [mensaje, setMensaje] = useState('');
+  const [contacto,setContacto]=useState(CONTACTO_DEFAULT);
+
+  useEffect(()=>{ getPortada().then((d)=>d&&setContacto({...CONTACTO_DEFAULT,...d})).catch(()=>{}); },[]);
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -98,7 +97,11 @@ export default function ContactModal({ open, onClose }) {
           </form>
 
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-xs text-slate-500">
-            {DATOS.map((d) => (
+            {[
+              {icon:Mail,valor:contacto.contacto_correo},
+              {icon:Phone,valor:contacto.contacto_telefono},
+              {icon:MapPin,valor:contacto.contacto_ubicacion},
+            ].filter((d)=>d.valor).map((d) => (
               <span key={d.valor} className="inline-flex items-center gap-1.5">
                 <d.icon size={13} className="text-primary-500" /> {d.valor}
               </span>

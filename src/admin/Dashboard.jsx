@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   LayoutDashboard, FlaskConical, BookOpen, Building2, Shapes, Tags, Newspaper, Info, ShieldCheck,
   Puzzle, KeyRound, UserCog, Users, LogOut, ExternalLink, Menu, X, ChevronDown, ChevronRight, UserRound,
+  ContactRound, Home, UserSearch,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LogoMark from '../components/ui/LogoMark.jsx';
@@ -11,8 +12,10 @@ import AboutEditor from './AboutEditor.jsx';
 import NetworkDashboard from './NetworkDashboard.jsx';
 import ProjectsManager from './ProjectsManager.jsx';
 import ProfileEditor from './ProfileEditor.jsx';
+import PortadaEditor from './PortadaEditor.jsx';
+import ContactMessages from './ContactMessages.jsx';
 import {
-  adminNoticias, adminInstituciones, adminAreas, adminTiposInvestigacion, adminPublicaciones,
+  adminNoticias, adminInstituciones, adminAreas, adminTiposInvestigacion, adminAreasInvestigacion, adminPublicaciones, adminInvestigadores,
   seguridadModulos, seguridadPermisos, seguridadRoles, seguridadUsuarios,
   getAreasConocimiento, getInstituciones, getMe,
 } from '../lib/api.js';
@@ -54,11 +57,15 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
   const catalogs=[
     {id:'instituciones',label:'Instituciones',icon:Building2,show:can('instituciones','lectura')},
     {id:'areas',label:'Áreas de conocimiento',icon:Shapes,show:can('areas_conocimiento','lectura')},
+    {id:'areasInvestigacion',label:'Áreas de investigación',icon:Shapes,show:can('areas_investigacion','lectura')},
     {id:'tipos',label:'Tipos de investigaciones',icon:Tags,show:can('tipos_investigacion','lectura')},
   ];
   const content=[
+    {id:'portada',label:'Portada',icon:Home,show:can('portada','lectura')},
+    {id:'personas',label:'Personas de la Red',icon:UserSearch,show:can('investigadores','lectura')},
     {id:'noticias',label:'Noticias',icon:Newspaper,show:can('noticias','lectura')},
     {id:'about',label:'Quiénes somos',icon:Info,show:can('about','lectura')},
+    {id:'mensajes',label:'Mensajes de contacto',icon:ContactRound,show:can('mensajes_contacto','lectura')},
   ];
   const security=[
     {id:'modulos',label:'Módulos',icon:Puzzle,show:can('seguridad_modulos','lectura')},
@@ -90,6 +97,25 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     {name:'enlace',label:'Enlace de consulta',type:'url',full:true},
     {name:'publicado',label:'Visible en la parte pública',type:'checkbox',defaultValue:true},
   ];
+  const personFields=useMemo(()=>[
+    {name:'nombre',label:'Nombre completo',type:'text',required:true,full:true},
+    {name:'rol',label:'Cargo / rol público',type:'text',defaultValue:'Profesor / Investigador'},
+    {name:'correo_institucional',label:'Correo institucional',type:'email'},
+    {name:'telefono',label:'Teléfono',type:'text'},
+    {name:'area_ids',label:'Áreas de conocimiento (una o más)',type:'multiselect',full:true,options:deps.areas.map((x)=>({value:x.id,label:x.nombre}))},
+    {name:'institucion_id',label:'Institución de adscripción',type:'select',options:deps.instituciones.map((x)=>({value:x.id,label:x.nombre}))},
+    {name:'bio',label:'Semblanza',type:'textarea',maxLength:600,full:true},
+    {name:'nivel_snii',label:'Nivel del SNII',type:'select',options:sniiOptions},
+    {name:'grado_maximo',label:'Grado máximo de estudios',type:'select',options:gradoOptions},
+    {name:'linea_investigacion',label:'Línea de investigación',type:'text',full:true},
+    {name:'foto_url',label:'Foto',type:'file'},
+    {name:'logo_institucion_url',label:'Logo institución (opcional)',type:'file'},
+    {name:'orcid',label:'ORCID',type:'url'},
+    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.'},
+    {name:'orden',label:'Orden en la portada',type:'number',defaultValue:0},
+    {name:'activo',label:'Visible en la parte pública',type:'checkbox',defaultValue:true,full:true},
+  ],[deps.areas,deps.instituciones]);
+
   const userFields=useMemo(()=>[
     {name:'nombre_completo',label:'Nombre completo',type:'text',required:true,full:true},
     {name:'correo',label:'Correo institucional',type:'email',required:true},
@@ -129,14 +155,18 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     if(tab==='dashboard') return <NetworkDashboard session={session}/>;
     if(tab==='investigaciones') return <ProjectsManager session={session}/>;
     if(tab==='perfil') return <ProfileEditor session={session} canEdit={can('perfil','actualizar')} onSaved={async()=>{try{onSessionChange(await getMe());}catch{}}}/>;
+    if(tab==='portada') return <PortadaEditor canEdit={can('portada','actualizar')}/>;
+    if(tab==='personas') return <ResourceManager titulo="Personas de la Red" api={adminInvestigadores} label={(i)=>i.nombre} fields={personFields} canCreate={can('investigadores','escritura')} canEdit={can('investigadores','actualizar')} canDelete={can('investigadores','eliminar')} subtitle="Administra las personas que aparecen en la sección pública ‘Las personas detrás de la Red’."/>;
     if(tab==='publicaciones') return <ResourceManager titulo="Publicaciones de la Red" api={adminPublicaciones} label={(i)=>i.titulo} fields={publicationFields} canCreate={can('publicaciones','escritura')} canEdit={can('publicaciones','actualizar')} canDelete={can('publicaciones','eliminar')} subtitle={admin?'Administra todos los productos generados con miembros de la Red.':'Registra los productos académicos y tecnológicos generados con miembros de la Red.'}/>;
     if(tab==='instituciones') return <ResourceManager titulo="Instituciones" api={adminInstituciones} label={(i)=>i.nombre} canCreate={can('instituciones','escritura')} canEdit={can('instituciones','actualizar')} canDelete={can('instituciones','eliminar')} fields={[
       {name:'nombre',label:'Nombre',type:'text',required:true,full:true},{name:'logo_url',label:'Logo',type:'file',full:true},{name:'enlace',label:'Enlace',type:'url'},{name:'orden',label:'Orden',type:'number'}]}/>;
     if(tab==='areas') return <ResourceManager titulo="Áreas de conocimiento" api={adminAreas} label={(i)=>i.nombre} canCreate={can('areas_conocimiento','escritura')} canEdit={can('areas_conocimiento','actualizar')} canDelete={can('areas_conocimiento','eliminar')} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
+    if(tab==='areasInvestigacion') return <ResourceManager titulo="Áreas de investigación" api={adminAreasInvestigacion} label={(i)=>i.nombre} canCreate={can('areas_investigacion','escritura')} canEdit={can('areas_investigacion','actualizar')} canDelete={can('areas_investigacion','eliminar')} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Catálogo de áreas temáticas de investigación que también se muestran en la portada."/>;
     if(tab==='tipos') return <ResourceManager titulo="Tipos de investigaciones" api={adminTiposInvestigacion} label={(i)=>i.nombre} canCreate={can('tipos_investigacion','escritura')} canEdit={can('tipos_investigacion','actualizar')} canDelete={can('tipos_investigacion','eliminar')} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
     if(tab==='noticias') return <ResourceManager titulo="Noticias" api={adminNoticias} label={(i)=>i.titulo} canCreate={can('noticias','escritura')} canEdit={can('noticias','actualizar')} canDelete={can('noticias','eliminar')} fields={[
       {name:'titulo',label:'Título',type:'text',required:true,full:true},{name:'extracto',label:'Extracto',type:'textarea',required:true,full:true},{name:'contenido',label:'Contenido',type:'textarea',required:true,full:true},{name:'categoria',label:'Categoría',type:'text'},{name:'fecha',label:'Fecha',type:'date',required:true},{name:'imagen_url',label:'Imagen',type:'file',full:true}]}/>;
-    if(tab==='about') return <AboutEditor/>;
+    if(tab==='about') return <AboutEditor canEdit={can('about','actualizar')}/>;
+    if(tab==='mensajes') return <ContactMessages canUpdate={can('mensajes_contacto','actualizar')} canDelete={can('mensajes_contacto','eliminar')}/>;
     if(tab==='modulos') return <ResourceManager titulo="Seguridad · Módulos" api={seguridadModulos} label={(i)=>i.nombre} canCreate={can('seguridad_modulos','escritura')} canEdit={can('seguridad_modulos','actualizar')} canDelete={can('seguridad_modulos','eliminar')} fields={[{name:'clave',label:'Clave',type:'text',required:true},{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Catálogo de todos los módulos que integran el sistema."/>;
     if(tab==='permisos') return <ResourceManager titulo="Seguridad · Permisos" api={seguridadPermisos} label={(i)=>`${i.modulo} · ${i.accion}`} canCreate={can('seguridad_permisos','escritura')} canEdit={can('seguridad_permisos','actualizar')} canDelete={can('seguridad_permisos','eliminar')} fields={[
       {name:'modulo_id',label:'Módulo',type:'select',required:true,options:deps.modules.map((x)=>({value:x.id,label:x.nombre}))},{name:'accion',label:'Permiso',type:'select',required:true,options:['lectura','escritura','actualizar','eliminar'].map((x)=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Permisos de lectura, escritura, actualización y eliminación asociados a cada módulo."/>;

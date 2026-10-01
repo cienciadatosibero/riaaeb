@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Target, Eye, Heart, Cpu, Stethoscope, Bot, Database } from 'lucide-react';
 import SectionTitle from './ui/SectionTitle.jsx';
 import Spotlight from './ui/Spotlight.jsx';
-import { getAbout } from '../lib/api.js';
+import { getAbout, getAreasInvestigacion } from '../lib/api.js';
 
 const POR_DEFECTO = {
   titulo: 'Una red que investiga tecnología con propósito',
@@ -14,18 +14,16 @@ const POR_DEFECTO = {
   imagen_url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1000&q=80',
 };
 
-const CAMPOS = [
-  { icon: Cpu, label: 'Inteligencia artificial' },
-  { icon: Stethoscope, label: 'Salud y bienestar' },
-  { icon: Bot, label: 'Robótica' },
-  { icon: Database, label: 'Ciencia de datos' },
-];
+const ICONOS=[Cpu,Stethoscope,Bot,Database];
+const CAMPOS_DEFAULT=['Inteligencia artificial','Salud y bienestar','Robótica','Ciencia de datos'];
 
 export default function About() {
   const [a, setA] = useState(POR_DEFECTO);
+  const [areasInvestigacion,setAreasInvestigacion]=useState(CAMPOS_DEFAULT.map((nombre,i)=>({id:`d${i}`,nombre})));
 
   useEffect(() => {
     getAbout().then((d) => { if (d) setA({ ...POR_DEFECTO, ...d }); }).catch(() => {});
+    getAreasInvestigacion().then((d)=>{ if((d||[]).length) setAreasInvestigacion(d); }).catch(()=>{});
   }, []);
 
   const PILARES = [
@@ -47,11 +45,12 @@ export default function About() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary-400/20" />
           <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
-            {CAMPOS.map((c) => (
-              <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs text-ink shadow-sm backdrop-blur">
-                <c.icon size={12} className="text-primary-500" /> {c.label}
-              </span>
-            ))}
+            {areasInvestigacion.slice(0,6).map((c,i) => {
+              const Icon=ICONOS[i%ICONOS.length];
+              return <span key={c.id||c.nombre} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs text-ink shadow-sm backdrop-blur">
+                <Icon size={12} className="text-primary-500" /> {c.nombre}
+              </span>;
+            })}
           </div>
         </Spotlight>
 

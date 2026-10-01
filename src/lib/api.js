@@ -24,7 +24,9 @@ export const getNoticias = () => request('/noticias');
 export const getInstituciones = () => request('/instituciones');
 export const getAreasConocimiento = () => request('/areas-conocimiento');
 export const getTiposInvestigacion = () => request('/tipos-investigacion');
+export const getAreasInvestigacion = () => request('/areas-investigacion');
 export const getAbout = () => request('/about');
+export const getPortada = () => request('/portada');
 export const enviarContacto = (payload) => request('/contacto', { method:'POST', body:JSON.stringify(payload) });
 export const registrarInvestigador = (payload) => request('/registro', { method:'POST', body:JSON.stringify(payload) });
 
@@ -58,11 +60,21 @@ export const adminPublicaciones = {
   remove: (id) => request(`/publicaciones/${id}`, { method:'DELETE', auth:true }),
 };
 export const adminNoticias = crud('noticias');
-export const adminInvestigadores = crud('investigadores');
+export const adminInvestigadores = {
+  list: () => request('/investigadores/admin', { auth:true }),
+  create: (d) => request('/investigadores', { method:'POST', auth:true, body:JSON.stringify(d) }),
+  update: (id,d) => request(`/investigadores/${id}`, { method:'PUT', auth:true, body:JSON.stringify(d) }),
+  remove: (id) => request(`/investigadores/${id}`, { method:'DELETE', auth:true }),
+};
 export const adminInstituciones = crud('instituciones');
 export const adminAreas = crud('areas-conocimiento','/admin');
 export const adminTiposInvestigacion = crud('tipos-investigacion','/admin');
+export const adminAreasInvestigacion = crud('areas-investigacion','/admin');
 export const saveAbout = (d) => request('/about', { method:'PUT', auth:true, body:JSON.stringify(d) });
+export const savePortada = (d) => request('/portada', { method:'PUT', auth:true, body:JSON.stringify(d) });
+export const getMensajesContacto = () => request('/contacto/admin', { auth:true });
+export const marcarMensajeContacto = (id,leido=true) => request(`/contacto/${id}/leido`, { method:'PUT', auth:true, body:JSON.stringify({leido}) });
+export const eliminarMensajeContacto = (id) => request(`/contacto/${id}`, { method:'DELETE', auth:true });
 
 // Seguridad
 export const seguridadModulos = crud('seguridad/modulos','');
