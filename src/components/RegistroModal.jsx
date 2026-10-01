@@ -18,7 +18,7 @@ export default function RegistroModal({ open, onClose }) {
   useEffect(()=>{if(!open)return;document.body.style.overflow='hidden';return()=>{document.body.style.overflow='';};},[open]);
   if(!open)return null;
   const set=(k,v)=>setForm((f)=>({...f,[k]:v}));
-  const submit=async(e)=>{e.preventDefault();setError('');if(form.password!==form.confirmar){setError('Las contraseñas no coinciden.');return;}if((form.area_ids||[]).length===0){setError('Selecciona al menos un área de conocimiento.');return;}setEstado('sending');try{await registrarInvestigador({...form,institucion_id:Number(form.institucion_id)||null});setEstado('done');}catch(e2){setError(e2.message);setEstado('idle');}};
+  const submit=async(e)=>{e.preventDefault();setError('');if(form.password!==form.confirmar){setError('Las contraseñas no coinciden.');return;}if((form.area_ids||[]).length===0){setError('Selecciona al menos un área de conocimiento.');return;}if(form.cvu_rizoma && !/^\d{7}$/.test(form.cvu_rizoma)){setError('El CVU Rizoma debe contener exactamente 7 dígitos.');return;}setEstado('sending');try{await registrarInvestigador({...form,institucion_id:Number(form.institucion_id)||null});setEstado('done');}catch(e2){setError(e2.message);setEstado('idle');}};
   const input='w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100';
   return <Portal><div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6">
     <div className="absolute inset-0 bg-ink/55 backdrop-blur-sm" onClick={onClose}/>
@@ -42,7 +42,7 @@ export default function RegistroModal({ open, onClose }) {
           <FileField publicUpload label="Foto" value={form.foto_url} onChange={(v)=>set('foto_url',v)}/>
           <FileField publicUpload label="Logo de institución (opcional)" value={form.logo_institucion_url} onChange={(v)=>set('logo_institucion_url',v)}/>
           <Field label="ORCID"><input type="url" className={input} placeholder="https://orcid.org/..." value={form.orcid} onChange={(e)=>set('orcid',e.target.value)}/></Field>
-          <Field label="CVU Rizoma (opcional)"><input type="url" className={input} placeholder="https://..." value={form.cvu_rizoma} onChange={(e)=>set('cvu_rizoma',e.target.value)}/></Field>
+          <Field label="CVU Rizoma (opcional)"><input type="text" inputMode="numeric" pattern="[0-9]{7}" maxLength="7" className={input} placeholder="1234567" value={form.cvu_rizoma} onChange={(e)=>set('cvu_rizoma',e.target.value.replace(/\D/g,'').slice(0,7))}/><p className="mt-1 text-[11px] text-slate-400">Debe contener exactamente 7 dígitos.</p></Field>
         </div>
         <div className="my-7 border-t border-line"/>
         <h3 className="font-display text-lg font-700 text-ink">Datos de acceso</h3><p className="mt-1 text-sm text-slate-500">Podrás iniciar sesión cuando el administrador active tu cuenta.</p>

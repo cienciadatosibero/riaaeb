@@ -137,8 +137,9 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
                   <>
                     <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-500">{f.label}</label>
                     <input type={['number','date','password','email','url'].includes(f.type) ? f.type : 'text'} value={form[f.name] ?? ''}
-                      required={f.required && !(editId && f.type==='password')} maxLength={f.maxLength} placeholder={f.placeholder || ''}
-                      onChange={(e)=>set(f.name,e.target.value)} className={inputClass}/>
+                      required={f.required && !(editId && f.type==='password')} maxLength={f.maxLength} minLength={f.minLength}
+                      pattern={f.pattern} inputMode={f.inputMode} placeholder={f.placeholder || ''}
+                      onChange={(e)=>set(f.name,f.digitsOnly ? e.target.value.replace(/\D/g,'').slice(0,f.maxLength || 100) : e.target.value)} className={inputClass}/>
                     {f.help && <p className="mt-1 text-[11px] text-slate-400">{f.help}</p>}
                   </>
                 )}

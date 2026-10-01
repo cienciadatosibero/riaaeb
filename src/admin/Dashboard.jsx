@@ -84,7 +84,7 @@ export default function Dashboard({ session, onSessionChange, onLogout }) {
     {name:'foto_url',label:'Foto',type:'file'},
     {name:'logo_institucion_url',label:'Logo institución (opcional)',type:'file'},
     {name:'orcid',label:'ORCID',type:'url'},
-    {name:'cvu_rizoma',label:'CVU Rizoma',type:'url'},
+    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.'},
     {name:'activo',label:'Cuenta activa / aprobada',type:'checkbox',defaultValue:true,full:true},
   ],[deps]);
 

@@ -110,10 +110,10 @@ function Modal({ p, onClose, onPrev, onNext }) {
             <div className="rounded-xl bg-soft p-3"><span className="text-[11px] uppercase tracking-wider text-slate-400">Nivel SNII</span><p className="mt-1 font-600 text-ink">{p.nivel_snii || '—'}</p></div>
             <div className="rounded-xl bg-soft p-3 sm:col-span-2"><span className="text-[11px] uppercase tracking-wider text-slate-400">Línea de investigación</span><p className="mt-1 font-600 text-ink">{p.linea_investigacion || '—'}</p></div>
             <div className="rounded-xl bg-soft p-3 sm:col-span-2"><span className="text-[11px] uppercase tracking-wider text-slate-400">Correo institucional</span><p className="mt-1 break-all font-600 text-ink">{p.correo_institucional || '—'}</p></div>
+            <div className="rounded-xl bg-soft p-3"><span className="text-[11px] uppercase tracking-wider text-slate-400">CVU Rizoma</span><p className="mt-1 font-mono font-600 text-ink">{p.cvu_rizoma || '—'}</p></div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {p.cvu_rizoma && <a href={p.cvu_rizoma} target="_blank" rel="noopener noreferrer" className="btn-shine inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-sm font-600 text-white">Ver CVU Rizoma <ExternalLink size={15}/></a>}
             {p.orcid && <a href={p.orcid} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600">ORCID <ExternalLink size={15}/></a>}
           </div>
         </div>
