@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Loader2, Save, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Loader2, Save, Search, Eye, EyeOff } from 'lucide-react';
 import FileField from './FileField.jsx';
 import AdminLoader from './AdminLoader.jsx';
 
@@ -21,6 +21,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
   const [editId, setEditId] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [buscar, setBuscar] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   const cargar = () => {
     setEstado('cargando');
@@ -29,16 +30,16 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
   };
   useEffect(cargar, [api]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const nuevo = () => { setForm(vacio(fields)); setEditId(null); setError(''); };
+  const nuevo = () => { setForm(vacio(fields)); setEditId(null); setError(''); setVisiblePasswords({}); };
   const editar = (item) => {
     const f = {};
     fields.forEach((fl) => {
       const v = item[fl.name];
       f[fl.name] = fl.type === 'multiselect' ? (Array.isArray(v) ? v : []) : fl.type === 'checkbox' ? !!v : (v ?? '');
     });
-    setForm(f); setEditId(item.id); setError('');
+    setForm(f); setEditId(item.id); setError(''); setVisiblePasswords({});
   };
-  const cancelar = () => { setForm(null); setEditId(null); setError(''); };
+  const cancelar = () => { setForm(null); setEditId(null); setError(''); setVisiblePasswords({}); };
   const set = (name,val) => setForm((p)=>({ ...p, [name]:val }));
 
   const guardar = async (e) => {
@@ -133,11 +134,37 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
                     <input type="checkbox" checked={!!form[f.name]} onChange={(e)=>set(f.name,e.target.checked)} className="h-4 w-4 accent-primary-500"/>
                     {f.label}
                   </label>
+                ) : f.type === 'password' ? (
+                  <>
+                    <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-500">{f.label}</label>
+                    <div className="relative">
+                      <input
+                        type={visiblePasswords[f.name] ? 'text' : 'password'}
+                        value={form[f.name] ?? ''}
+                        required={f.required && !editId}
+                        maxLength={f.maxLength}
+                        minLength={f.minLength}
+                        placeholder={f.placeholder || ''}
+                        onChange={(e)=>set(f.name,e.target.value)}
+                        className={`${inputClass} pr-11`}
+                      />
+                      <button
+                        type="button"
+                        onClick={()=>setVisiblePasswords((p)=>({ ...p, [f.name]: !p[f.name] }))}
+                        className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-soft hover:text-primary-600"
+                        aria-label={visiblePasswords[f.name] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        title={visiblePasswords[f.name] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {visiblePasswords[f.name] ? <EyeOff size={17}/> : <Eye size={17}/>}
+                      </button>
+                    </div>
+                    {f.help && <p className="mt-1 text-[11px] text-slate-400">{f.help}</p>}
+                  </>
                 ) : (
                   <>
                     <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-500">{f.label}</label>
-                    <input type={['number','date','password','email','url'].includes(f.type) ? f.type : 'text'} value={form[f.name] ?? ''}
-                      required={f.required && !(editId && f.type==='password')} maxLength={f.maxLength} minLength={f.minLength}
+                    <input type={['number','date','email','url'].includes(f.type) ? f.type : 'text'} value={form[f.name] ?? ''}
+                      required={f.required} maxLength={f.maxLength} minLength={f.minLength}
                       pattern={f.pattern} inputMode={f.inputMode} placeholder={f.placeholder || ''}
                       onChange={(e)=>set(f.name,f.digitsOnly ? e.target.value.replace(/\D/g,'').slice(0,f.maxLength || 100) : e.target.value)} className={inputClass}/>
                     {f.help && <p className="mt-1 text-[11px] text-slate-400">{f.help}</p>}

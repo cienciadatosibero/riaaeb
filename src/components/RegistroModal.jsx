@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, UserPlus, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, UserPlus, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Portal from './ui/Portal.jsx';
 import FileField from '../admin/FileField.jsx';
 import { getAreasConocimiento, getInstituciones, registrarInvestigador } from '../lib/api.js';
@@ -13,7 +13,7 @@ const grados=['Licenciatura','Especialidad','Maestría','Doctorado','Posdoctorad
 const niveles=['Sin nivel','Candidato','Nivel I','Nivel II','Nivel III','Emérito'];
 
 export default function RegistroModal({ open, onClose }) {
-  const [form,setForm]=useState(init); const [areas,setAreas]=useState([]); const [inst,setInst]=useState([]); const [estado,setEstado]=useState('idle'); const [error,setError]=useState('');
+  const [form,setForm]=useState(init); const [areas,setAreas]=useState([]); const [inst,setInst]=useState([]); const [estado,setEstado]=useState('idle'); const [error,setError]=useState(''); const [showPassword,setShowPassword]=useState(false); const [showConfirm,setShowConfirm]=useState(false);
   useEffect(()=>{if(!open)return;Promise.all([getAreasConocimiento(),getInstituciones()]).then(([a,i])=>{setAreas(a||[]);setInst(i||[]);}).catch((e)=>setError(e.message));},[open]);
   useEffect(()=>{if(!open)return;document.body.style.overflow='hidden';return()=>{document.body.style.overflow='';};},[open]);
   if(!open)return null;
@@ -46,7 +46,21 @@ export default function RegistroModal({ open, onClose }) {
         </div>
         <div className="my-7 border-t border-line"/>
         <h3 className="font-display text-lg font-700 text-ink">Datos de acceso</h3><p className="mt-1 text-sm text-slate-500">Podrás iniciar sesión cuando el administrador active tu cuenta.</p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3"><Field label="Usuario"><input className={input} value={form.usuario} onChange={(e)=>set('usuario',e.target.value)} required/></Field><Field label="Contraseña"><input type="password" minLength="8" className={input} value={form.password} onChange={(e)=>set('password',e.target.value)} required/></Field><Field label="Confirmar contraseña"><input type="password" minLength="8" className={input} value={form.confirmar} onChange={(e)=>set('confirmar',e.target.value)} required/></Field></div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Field label="Usuario"><input className={input} value={form.usuario} onChange={(e)=>set('usuario',e.target.value)} required/></Field>
+          <Field label="Contraseña">
+            <div className="relative">
+              <input type={showPassword?'text':'password'} minLength="8" className={`${input} pr-11`} value={form.password} onChange={(e)=>set('password',e.target.value)} required/>
+              <button type="button" onClick={()=>setShowPassword((v)=>!v)} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-soft hover:text-primary-600" aria-label={showPassword?'Ocultar contraseña':'Mostrar contraseña'} title={showPassword?'Ocultar contraseña':'Mostrar contraseña'}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button>
+            </div>
+          </Field>
+          <Field label="Confirmar contraseña">
+            <div className="relative">
+              <input type={showConfirm?'text':'password'} minLength="8" className={`${input} pr-11`} value={form.confirmar} onChange={(e)=>set('confirmar',e.target.value)} required/>
+              <button type="button" onClick={()=>setShowConfirm((v)=>!v)} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-soft hover:text-primary-600" aria-label={showConfirm?'Ocultar contraseña':'Mostrar contraseña'} title={showConfirm?'Ocultar contraseña':'Mostrar contraseña'}>{showConfirm?<EyeOff size={17}/>:<Eye size={17}/>}</button>
+            </div>
+          </Field>
+        </div>
         {error&&<p className="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
         <div className="mt-6 flex justify-end"><button disabled={estado==='sending'} className="btn-shine inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-sm font-600 text-white disabled:opacity-60">{estado==='sending'?<Loader2 size={16} className="animate-spin"/>:<UserPlus size={16}/>}Enviar registro</button></div>
       </form>}

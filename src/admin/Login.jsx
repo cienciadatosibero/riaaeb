@@ -1,6 +1,6 @@
 // frontend/src/admin/Login.jsx
 import { useState } from 'react';
-import { Lock, Loader2 } from 'lucide-react';
+import { Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { login as apiLogin, setToken } from '../lib/api.js';
 import LogoMark from '../components/ui/LogoMark.jsx';
 
@@ -9,6 +9,7 @@ export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [estado, setEstado] = useState('idle');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -41,8 +42,16 @@ export default function Login({ onLogin }) {
           </div>
           <div>
             <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-400">Contraseña</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-              className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400" />
+            <div className="relative">
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
+                className="w-full rounded-lg border border-line bg-white px-3 py-2.5 pr-11 text-sm text-ink outline-none focus:border-primary-400" />
+              <button type="button" onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-soft hover:text-primary-500"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
         </div>
 
