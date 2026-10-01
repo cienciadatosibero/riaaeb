@@ -81,7 +81,7 @@ export default function News() {
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <SectionTitle
-            index="03"
+            index="04"
             eyebrow="Noticias"
             title="Lo último de la Red"
             subtitle="Recorre nuestras cinco publicaciones más recientes. Haz clic en cualquiera para ver la información completa."

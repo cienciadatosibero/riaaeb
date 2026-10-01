@@ -41,7 +41,7 @@ export default function AboutEditor() {
 
   return (
     <div>
-      <h2 className="mb-6 font-display text-2xl font-700 text-white">Quiénes somos</h2>
+      <h2 className="mb-6 font-display text-2xl font-700 text-ink">Quiénes somos</h2>
       {error && <p className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
       <form onSubmit={guardar} className="rounded-2xl border border-line bg-surface p-6">
         <div className="grid gap-4">
@@ -53,13 +53,13 @@ export default function AboutEditor() {
                 <>
                   <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-400">{f.label}</label>
                   <textarea rows={3} value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
-                    className="w-full resize-none rounded-lg border border-line bg-base px-3 py-2.5 text-sm text-white outline-none focus:border-primary-400" />
+                    className="w-full resize-none rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400" />
                 </>
               ) : (
                 <>
                   <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-400">{f.label}</label>
                   <input value={form[f.name] || ''} onChange={(e) => set(f.name, e.target.value)}
-                    className="w-full rounded-lg border border-line bg-base px-3 py-2.5 text-sm text-white outline-none focus:border-primary-400" />
+                    className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400" />
                 </>
               )}
             </div>
@@ -67,7 +67,7 @@ export default function AboutEditor() {
         </div>
         <div className="mt-5 flex items-center gap-3">
           <button type="submit" disabled={guardando}
-            className="btn-shine inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-400 px-6 py-3 text-sm font-600 text-base hover:-translate-y-0.5 disabled:opacity-60">
+            className="btn-shine inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-400 px-6 py-3 text-sm font-600 text-white hover:-translate-y-0.5 disabled:opacity-60">
             {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Guardar
           </button>
           {ok && <span className="inline-flex items-center gap-1.5 text-sm text-emerald-300"><CheckCircle2 size={16} /> Guardado</span>}

@@ -4,6 +4,7 @@ import Header from './components/Header.jsx';
 import Hero from './components/Hero.jsx';
 import About from './components/About.jsx';
 import Investigaciones from './components/Investigaciones.jsx';
+import Publicaciones from './components/Publicaciones.jsx';
 import News from './components/News.jsx';
 import Investigadores from './components/Investigadores.jsx';
 import Instituciones from './components/Instituciones.jsx';
@@ -31,6 +32,7 @@ export default function Home() {
         <Hero />
         <Reveal><About /></Reveal>
         <Reveal><Investigaciones /></Reveal>
+        <Reveal><Publicaciones /></Reveal>
         <Reveal><News /></Reveal>
         <Reveal><Investigadores /></Reveal>
         <Reveal><Instituciones /></Reveal>

@@ -1,168 +1,41 @@
-// frontend/src/components/Investigaciones.jsx
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Globe, Calendar, Image as ImageIcon, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FlaskConical, Users, GraduationCap, X, BookOpenCheck, CircleDot } from 'lucide-react';
 import SectionTitle from './ui/SectionTitle.jsx';
+import Portal from './ui/Portal.jsx';
 import { getInvestigaciones } from '../lib/api.js';
 
-/* ── Vista previa real de la página enlazada ──────────────────────────────
-   Usa el servicio de captura de WordPress (mShots): no requiere API key y
-   genera un screenshot de cualquier URL pública. La primera vez puede tardar
-   unos segundos (mientras WordPress renderiza la captura), por eso mostramos
-   un placeholder animado hasta que la imagen carga.                           */
-function screenshotURL(url, w = 1280, h = 1000) {
-  if (!url) return '';
-  const limpio = encodeURIComponent(url.trim());
-  return `https://s.wordpress.com/mshots/v1/${limpio}?w=${w}&h=${h}`;
+function Block({ title, children }) {
+  if (!children || (Array.isArray(children) && !children.length)) return null;
+  return <div className="rounded-2xl border border-line bg-soft p-4"><p className="font-mono text-[11px] uppercase tracking-[.16em] text-primary-500">{title}</p><div className="mt-2 text-sm leading-relaxed text-slate-600">{children}</div></div>;
 }
-
-function hostDe(url) {
-  try { return new URL(url).hostname.replace(/^www\./, ''); }
-  catch { return url; }
-}
-
-function Preview({ url }) {
-  const src = useMemo(() => screenshotURL(url), [url]);
-  const [estado, setEstado] = useState('cargando'); // cargando | listo | error
-  const imgRef = useRef(null);
-
-  // mShots a veces devuelve una imagen "en blanco" la primera vez; reintenta una vez.
-  const [intentos, setIntentos] = useState(0);
-  useEffect(() => { setEstado('cargando'); setIntentos(0); }, [src]);
-
-  return (
-    <div className="relative h-[56%] shrink-0 overflow-hidden bg-slate-100">
-      {/* Placeholder mientras genera/carga la captura */}
-      {estado !== 'listo' && (
-        <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-slate-100 to-slate-200">
-          <div className="flex flex-col items-center gap-2 text-slate-400">
-            <ImageIcon size={26} className={estado === 'error' ? '' : 'animate-pulse'} />
-            <span className="font-mono text-[11px] uppercase tracking-wider">
-              {estado === 'error' ? 'Vista previa no disponible' : 'Generando vista previa…'}
-            </span>
-          </div>
-        </div>
-      )}
-      <img
-        ref={imgRef}
-        key={intentos}
-        src={intentos === 0 ? src : `${src}&retry=${intentos}`}
-        alt={`Vista previa de ${hostDe(url)}`}
-        loading="lazy"
-        onLoad={() => setEstado('listo')}
-        onError={() => {
-          if (intentos < 1) setIntentos((n) => n + 1);
-          else setEstado('error');
-        }}
-        className={`h-full w-full object-cover object-top transition-all duration-[1200ms] ease-out
-          ${estado === 'listo' ? 'scale-100 opacity-100 group-hover:scale-105' : 'scale-100 opacity-0'}`}
-      />
+function Detail({ p, onClose }) {
+  useEffect(()=>{const k=(e)=>e.key==='Escape'&&onClose();document.addEventListener('keydown',k);document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',k);document.body.style.overflow='';};},[onClose]);
+  return <Portal><div className="fixed inset-0 z-[135] flex items-center justify-center p-3 sm:p-6"><div className="absolute inset-0 bg-ink/60 backdrop-blur-sm" onClick={onClose}/><div className="animate-modal-in relative z-10 max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white p-6 shadow-lift sm:p-8">
+    <button onClick={onClose} className="absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-xl border border-line bg-white text-slate-500"><X size={18}/></button>
+    <div className="pr-12"><div className="flex flex-wrap gap-2"><span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-700 text-primary-700">{p.area_nombre||p.area||'Sin área'}</span><span className="rounded-full bg-soft px-3 py-1 text-xs font-600 text-slate-600">{p.estatus==='terminado'?'Terminado':'En proceso'}</span></div><h3 className="mt-4 font-display text-2xl font-700 text-ink sm:text-3xl">{p.titulo}</h3></div>
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <Block title="Resumen"><p>{p.resumen}</p></Block>
+      <Block title="Tipo de investigación"><p>{p.tipo_nombre||p.tipo||'—'}</p></Block>
+      <Block title="Impacto científico"><p>{p.impacto_cientifico||'No especificado.'}</p></Block>
+      <Block title="Impacto social"><p>{p.impacto_social||'No especificado.'}</p></Block>
+      <Block title="Aportaciones a la solución"><p>{p.aportaciones_solucion||'No especificado.'}</p></Block>
+      <Block title="Acceso universal al conocimiento"><p>{p.acceso_universal||'No especificado.'}</p></Block>
     </div>
-  );
-}
-
-function Tarjeta({ inv, i }) {
-  return (
-    <a
-      href={inv.enlace}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ animationDelay: `${0.05 * i}s` }}
-      className="group relative flex aspect-[3/4] animate-fade-up flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-card transition-all duration-500 hover:-translate-y-2 hover:border-primary-300 hover:shadow-lift"
-    >
-      {/* Captura de la página (ventana superior, reserva su altura) */}
-      <Preview url={inv.enlace} />
-
-      {/* Velo de color sobre la captura al hover */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[56%] bg-primary-500/0 transition-colors duration-500 group-hover:bg-primary-500/10" />
-
-      {/* Etiqueta superior (tipo / año) — fondo oscuro sólido, legible sobre cualquier captura */}
-      <div className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-white shadow-sm backdrop-blur-sm">
-          <Globe size={12} /> {inv.tipo}
-        </span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-2.5 py-1 font-mono text-[11px] font-600 text-white shadow-sm">
-          <Calendar size={11} /> {inv.anio}
-        </span>
-      </div>
-
-      {/* Aro de color al hover */}
-      <div className="pointer-events-none absolute inset-0 z-20 rounded-3xl ring-1 ring-inset ring-black/5 transition-all duration-500 group-hover:ring-2 group-hover:ring-primary-400/60" />
-
-      {/* Contenido inferior sobre tarjeta blanca */}
-      <div className="relative z-10 flex flex-1 flex-col p-5">
-        <h3 className="line-clamp-2 font-display text-lg font-700 leading-snug text-ink transition-colors duration-300 group-hover:text-primary-600">
-          {inv.titulo}
-        </h3>
-        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
-          {inv.resumen}
-        </p>
-
-        {/* Fila inferior: chip autores + botón */}
-        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <span className="inline-flex max-w-[55%] items-center gap-1.5 truncate rounded-full bg-primary-50 px-3 py-1.5 text-xs text-primary-700">
-            <Star size={12} className="shrink-0 fill-primary-400 text-primary-400" />
-            <span className="truncate">{inv.autores || hostDe(inv.enlace)}</span>
-          </span>
-
-          <span className="btn-shine inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-600 text-white shadow-sm transition-all duration-300 group-hover:bg-primary-500">
-            Visitar
-            <ArrowUpRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
-        </div>
-      </div>
-    </a>
-  );
+    <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <Block title="Profesores asociados"><ul className="space-y-2">{(p.profesores||[]).length?(p.profesores||[]).map((x)=><li key={x.usuario_id} className="flex items-center gap-2"><Users size={14} className="text-primary-500"/><span>{x.nombre}{x.institucion?` · ${x.institucion}`:''}</span></li>):<li>{p.autores||'Sin profesores asociados.'}</li>}</ul></Block>
+      <Block title="Estudiantes asociados"><ul className="space-y-2">{(p.estudiantes||[]).length?(p.estudiantes||[]).map((x)=><li key={x.usuario_id} className="flex items-center gap-2"><GraduationCap size={14} className="text-primary-500"/>{x.nombre}</li>):<li>Sin estudiantes asociados.</li>}</ul></Block>
+    </div>
+    <div className="mt-4"><Block title="Referencias más relevantes"><ol className="list-decimal space-y-2 pl-5">{(p.referencias||[]).length?(p.referencias||[]).map((r,i)=><li key={i}>{r}</li>):<li className="list-none">No se registraron referencias.</li>}</ol></Block></div>
+  </div></div></Portal>;
 }
 
 export default function Investigaciones() {
-  const [items, setItems] = useState([]);
-  const [estado, setEstado] = useState('cargando');
-
-  useEffect(() => {
-    getInvestigaciones()
-      .then((data) => { setItems(data); setEstado('listo'); })
-      .catch(() => setEstado('error'));
-  }, []);
-
-  return (
-    <section id="investigaciones" className="relative overflow-hidden border-t border-line bg-soft py-24">
-      <div className="glow-bg pointer-events-none absolute inset-0 opacity-60" />
-      <div className="relative mx-auto max-w-7xl px-6">
-        <SectionTitle
-          index="02"
-          eyebrow="Investigaciones"
-          title="Investigaciones"
-          subtitle="Explora nuestros estudios y proyectos. Cada tarjeta muestra una vista previa real de la página a la que enlaza."
-        />
-
-        <div className="mt-12">
-          {estado === 'cargando' && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] animate-pulse rounded-3xl border border-line bg-white" />
-              ))}
-            </div>
-          )}
-
-          {estado === 'error' && (
-            <p className="rounded-xl border border-primary-200 bg-primary-50 p-6 text-sm text-primary-700">
-              No pudimos cargar las investigaciones. Verifica que el backend esté en ejecución.
-            </p>
-          )}
-
-          {estado === 'listo' && (
-            items.length === 0 ? (
-              <p className="rounded-xl border border-line bg-white p-6 text-sm text-slate-500">
-                Aún no hay investigaciones publicadas.
-              </p>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((inv, i) => <Tarjeta key={inv.id} inv={inv} i={i} />)}
-              </div>
-            )
-          )}
-        </div>
-      </div>
-    </section>
-  );
+  const [items,setItems]=useState([]); const [estado,setEstado]=useState('cargando'); const [modal,setModal]=useState(null);
+  useEffect(()=>{getInvestigaciones().then((d)=>{setItems(d||[]);setEstado('listo');}).catch(()=>setEstado('error'));},[]);
+  return <section id="investigaciones" className="relative overflow-hidden border-t border-line bg-soft py-24"><div className="glow-bg pointer-events-none absolute inset-0 opacity-60"/><div className="relative mx-auto max-w-7xl px-6">
+    <SectionTitle index="02" eyebrow="Investigaciones" title="Proyectos de investigación de la Red" subtitle="Consulta el propósito, los impactos, las referencias y las personas asociadas a cada proyecto sin salir de esta página."/>
+    {estado==='cargando'&&<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{Array.from({length:6}).map((_,i)=><div key={i} className="h-80 animate-pulse rounded-3xl bg-white"/>)}</div>}
+    {estado==='error'&&<p className="mt-12 rounded-xl border border-primary-200 bg-primary-50 p-6 text-sm text-primary-700">No pudimos cargar las investigaciones.</p>}
+    {estado==='listo'&&<div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{items.map((p)=><article key={p.id} className="group flex min-h-80 flex-col rounded-3xl border border-line bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:border-primary-200 hover:shadow-lift"><div className="flex items-start justify-between gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-50 text-primary-600"><FlaskConical size={20}/></span><span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-700 ${p.estatus==='terminado'?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}`}><CircleDot size={11}/>{p.estatus==='terminado'?'Terminado':'En proceso'}</span></div><h3 className="mt-5 line-clamp-3 font-display text-xl font-700 leading-snug text-ink">{p.titulo}</h3><p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-500">{p.resumen}</p><div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-primary-50 px-3 py-1 text-primary-700">{p.area_nombre||p.area||'Sin área'}</span></div><button onClick={()=>setModal(p)} className="btn-shine mt-auto inline-flex w-fit items-center gap-2 pt-6 text-sm font-700 text-primary-600"><BookOpenCheck size={16}/>Ver detalle</button></article>)}{items.length===0&&<p className="text-sm text-slate-500">Aún no hay investigaciones publicadas.</p>}</div>}
+  </div>{modal&&<Detail p={modal} onClose={()=>setModal(null)}/>}</section>;
 }

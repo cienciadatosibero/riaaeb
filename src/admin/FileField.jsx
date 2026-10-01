@@ -1,7 +1,7 @@
 // frontend/src/admin/FileField.jsx
 import { useState } from 'react';
 import { Upload, Loader2, Link2 } from 'lucide-react';
-import { subirArchivo } from '../lib/api.js';
+import { subirArchivo, subirArchivoPublico } from '../lib/api.js';
 
 /* Convierte cualquier imagen a WebP en el navegador antes de subirla.
    Si el navegador no soporta WebP (muy raro) o falla, devuelve el archivo original. */
@@ -31,7 +31,7 @@ async function aWebp(file, calidad = 0.9, maxLado = 2000) {
   }
 }
 
-export default function FileField({ label, value, onChange }) {
+export default function FileField({ label, value, onChange, publicUpload = false }) {
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState('');
   const [modoUrl, setModoUrl] = useState(false);
@@ -42,7 +42,7 @@ export default function FileField({ label, value, onChange }) {
     setSubiendo(true); setError('');
     try {
       const file = await aWebp(original);
-      const { url } = await subirArchivo(file);
+      const { url } = await (publicUpload ? subirArchivoPublico(file) : subirArchivo(file));
       onChange(url);
     } catch (err) {
       setError(err.message);
@@ -64,17 +64,17 @@ export default function FileField({ label, value, onChange }) {
       <div className="flex items-center gap-3">
         {value && (
           <img src={value} alt="vista previa"
-            className="h-14 w-14 shrink-0 rounded-lg border border-line bg-base object-contain" />
+            className="h-14 w-14 shrink-0 rounded-lg border border-line bg-white object-contain" />
         )}
         <div className="flex-1">
           {modoUrl ? (
             <input
               type="text" value={value || ''} onChange={(e) => onChange(e.target.value)}
               placeholder="https://…"
-              className="w-full rounded-lg border border-line bg-base px-3 py-2.5 text-sm text-white outline-none focus:border-primary-400"
+              className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-primary-400"
             />
           ) : (
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-line bg-base px-3 py-2.5 text-sm text-slate-300 hover:border-primary-400">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-line bg-white px-3 py-2.5 text-sm text-slate-600 hover:border-primary-400">
               {subiendo ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
               {subiendo ? 'Convirtiendo y subiendo…' : 'Seleccionar imagen'}
               <input type="file" accept="image/*" className="hidden" onChange={onFile} disabled={subiendo} />

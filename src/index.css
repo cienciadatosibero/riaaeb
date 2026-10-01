@@ -108,38 +108,8 @@ html { scrollbar-color: #e11d3a #f6f7fb; scrollbar-width: thin; }
     invert(28%) sepia(82%) saturate(3200%) hue-rotate(335deg) brightness(108%) contrast(100%);
 }
 
-/* ---------- Panel de administración (tema CLARO con gama ROJA) ----------
-   El admin comparte tokens (bg-base, bg-surface, text-white…). Aquí se fuerzan
-   a una variante CLARA con acentos rojos para que combine con el sitio. */
-.admin-shell { background:#f6f7fb; color:#475569; min-height:100vh;
-  background-image:
-    radial-gradient(60% 50% at 85% 0%, rgba(225,29,58,0.07), transparent 70%),
-    radial-gradient(40% 40% at 8% 6%, rgba(255,90,110,0.05), transparent 70%); }
-.admin-shell .bg-base    { background-color:#ffffff !important; }
-.admin-shell .bg-base\/50,
-.admin-shell .bg-base\/60,
-.admin-shell .bg-base\/70,
-.admin-shell .bg-base\/80,
-.admin-shell .bg-base\/95 { background-color:rgba(255,255,255,.85) !important; }
-.admin-shell .bg-surface,
-.admin-shell .bg-surface\/40,
-.admin-shell .bg-surface\/60 { background-color:#ffffff !important; }
-.admin-shell .border-line { border-color:#e7e9f2 !important; }
-.admin-shell .text-white  { color:#0f1222 !important; }   /* títulos -> tinta */
-.admin-shell .text-base   { color:#ffffff !important; }   /* texto sobre botón rojo -> blanco */
-.admin-shell .text-slate-300 { color:#475569 !important; }
-.admin-shell .text-slate-400 { color:#64748b !important; }
-.admin-shell .text-slate-500 { color:#94a3b8 !important; }
-.admin-shell .placeholder\:text-slate-600::placeholder { color:#94a3b8 !important; }
-.admin-shell .glow-bg { background:
-  radial-gradient(60% 50% at 70% 0%, rgba(225,29,58,0.08), transparent 70%),
-  radial-gradient(40% 40% at 20% 10%, rgba(255,90,110,0.05), transparent 70%) !important; }
-/* cards de lista y hover en claro */
-.admin-shell .bg-surface\/40 { background-color:#ffffff !important; }
-.admin-shell .hover\:bg-surface\/70:hover,
-.admin-shell .hover\:bg-surface:hover { background-color:#f6f7fb !important; }
-.admin-shell .text-red-300 { color:#b91c1c !important; }
-.admin-shell .bg-red-500\/10 { background-color:#fef2f2 !important; }
+/* Panel administrativo */
+.admin-shell { min-height:100vh; background:#f5f7fb; color:#475569; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition:none !important; animation:none !important; scroll-behavior:auto !important; }

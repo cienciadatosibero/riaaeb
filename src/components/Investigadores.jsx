@@ -33,7 +33,7 @@ function Card({ p, frente, onAbrir }) {
       <div className="flex h-[38%] flex-col p-4">
         <h3 className="font-display text-lg font-700 leading-tight text-ink">{p.nombre}</h3>
         <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
-          {p.rol}{p.area ? ` · ${p.area}` : ''}
+          {p.rol}{(p.areas?.length || p.area) ? ` · ${(p.areas || [p.area]).filter(Boolean).join(', ')}` : ''}
         </p>
         <div className="mt-auto flex items-center justify-between">
           <span className="inline-flex items-center gap-1 truncate pr-2 text-xs text-slate-500">
@@ -98,22 +98,24 @@ function Modal({ p, onClose, onPrev, onNext }) {
           </button>
 
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-500">Investigador</p>
-          {p.area && <p className="mt-2 inline-flex w-fit rounded-full bg-primary-50 px-3 py-1 text-xs font-600 text-primary-700">{p.area}</p>}
+          <h3 className="mt-2 pr-10 font-display text-2xl font-700 text-ink sm:hidden">{p.nombre}</h3>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(p.areas?.length ? p.areas : p.area ? [p.area] : []).map((a) => <span key={a} className="rounded-full bg-primary-50 px-3 py-1 text-xs font-600 text-primary-700">{a}</span>)}
+          </div>
 
           <p className="mt-4 text-sm leading-relaxed text-slate-600">{p.bio}</p>
 
-          <div className="mt-6 space-y-2 border-t border-line pt-4 text-sm text-slate-500">
-            {p.institucion && (
-              <p className="flex items-center gap-2"><Users size={15} className="text-primary-400" /> {p.institucion}</p>
-            )}
+          <div className="mt-6 grid gap-3 border-t border-line pt-5 text-sm sm:grid-cols-2">
+            <div className="rounded-xl bg-soft p-3"><span className="text-[11px] uppercase tracking-wider text-slate-400">Institución de adscripción</span><p className="mt-1 font-600 text-ink">{p.institucion || '—'}</p></div>
+            <div className="rounded-xl bg-soft p-3"><span className="text-[11px] uppercase tracking-wider text-slate-400">Nivel SNII</span><p className="mt-1 font-600 text-ink">{p.nivel_snii || '—'}</p></div>
+            <div className="rounded-xl bg-soft p-3 sm:col-span-2"><span className="text-[11px] uppercase tracking-wider text-slate-400">Línea de investigación</span><p className="mt-1 font-600 text-ink">{p.linea_investigacion || '—'}</p></div>
+            <div className="rounded-xl bg-soft p-3 sm:col-span-2"><span className="text-[11px] uppercase tracking-wider text-slate-400">Correo institucional</span><p className="mt-1 break-all font-600 text-ink">{p.correo_institucional || '—'}</p></div>
           </div>
 
-          {p.enlace && (
-            <a href={p.enlace} target="_blank" rel="noopener noreferrer"
-              className="btn-shine mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-400 px-6 py-3 text-sm font-600 text-white transition-all hover:-translate-y-0.5">
-              Ver perfil completo <ExternalLink size={15} />
-            </a>
-          )}
+          <div className="mt-6 flex flex-wrap gap-3">
+            {p.cvu_rizoma && <a href={p.cvu_rizoma} target="_blank" rel="noopener noreferrer" className="btn-shine inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-sm font-600 text-white">Ver CVU Rizoma <ExternalLink size={15}/></a>}
+            {p.orcid && <a href={p.orcid} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-3 text-sm font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600">ORCID <ExternalLink size={15}/></a>}
+          </div>
         </div>
       </div>
     </div>
@@ -187,7 +189,7 @@ export default function Investigadores() {
       <div className="glow-bg pointer-events-none absolute inset-0 opacity-60" />
       <div className="relative mx-auto max-w-7xl px-6">
         <SectionTitle
-          index="04"
+          index="05"
           eyebrow="Investigadores"
           title="Las personas detrás de la Red"
           subtitle="Un equipo interdisciplinario que combina ingeniería, ciencia de datos, salud y ciencias sociales para construir tecnología con impacto."

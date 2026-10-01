@@ -8,10 +8,12 @@ const NAV = [
   { label: 'Inicio', href: '#inicio' },
   { label: 'Nosotros', href: '#nosotros' },
   { label: 'Investigaciones', href: '#investigaciones' },
+  { label: 'Publicaciones', href: '#publicaciones' },
   { label: 'Investigadores', href: '#investigadores' },
 ];
 const RECURSOS = [
   { label: 'Investigaciones', href: '#investigaciones' },
+  { label: 'Publicaciones de la Red', href: '#publicaciones' },
   { label: 'Noticias', href: '#noticias' },
   { label: 'Convocatorias', href: '#noticias' },
 ];
