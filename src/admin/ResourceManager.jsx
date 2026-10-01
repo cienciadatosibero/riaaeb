@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Loader2, Save, Search, Eye, EyeOff } from 'lucide-react';
+import {
+  Plus, Pencil, Trash2, X, Loader2, Save, Search, Eye, EyeOff,
+  ChevronLeft, ChevronRight,
+} from 'lucide-react';
 import FileField from './FileField.jsx';
 import AdminLoader from './AdminLoader.jsx';
 
+const PAGE_SIZE = 10;
 
 function Miniatura({ src, id }) {
   const [error, setError] = useState(false);
@@ -25,10 +29,175 @@ function Miniatura({ src, id }) {
   );
 }
 
+function Pagination({ page, setPage, total, pageSize = PAGE_SIZE }) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+      <p className="text-xs text-slate-400">
+        Página {page} de {totalPages} · {total} registro{total === 1 ? '' : 's'}
+      </p>
+      <div className="flex flex-wrap items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page <= 1}
+          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-slate-500 disabled:opacity-35"
+          title="Página anterior"
+        >
+          <ChevronLeft size={15} />
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setPage(n)}
+            className={`h-8 min-w-8 rounded-lg border px-2 text-xs font-700 transition ${
+              n === page
+                ? 'border-primary-500 bg-primary-500 text-white'
+                : 'border-line bg-white text-slate-500 hover:border-primary-300 hover:text-primary-600'
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page >= totalPages}
+          className="grid h-8 w-8 place-items-center rounded-lg border border-line text-slate-500 disabled:opacity-35"
+          title="Página siguiente"
+        >
+          <ChevronRight size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DualListField({ label, options = [], value = [], onChange }) {
+  const [buscarDisponibles, setBuscarDisponibles] = useState('');
+  const [buscarAsignados, setBuscarAsignados] = useState('');
+  const [paginaDisponibles, setPaginaDisponibles] = useState(1);
+  const [paginaAsignados, setPaginaAsignados] = useState(1);
+
+  const selected = new Set((value || []).map(Number));
+  const disponibles = options.filter((op) => !selected.has(Number(op.value)));
+  const asignados = options.filter((op) => selected.has(Number(op.value)));
+
+  const filtrar = (arr, q) => {
+    const term = q.trim().toLowerCase();
+    return !term ? arr : arr.filter((op) => String(op.label || '').toLowerCase().includes(term));
+  };
+
+  const disponiblesFiltrados = filtrar(disponibles, buscarDisponibles);
+  const asignadosFiltrados = filtrar(asignados, buscarAsignados);
+
+  const paginasDisponibles = Math.max(1, Math.ceil(disponiblesFiltrados.length / PAGE_SIZE));
+  const paginasAsignados = Math.max(1, Math.ceil(asignadosFiltrados.length / PAGE_SIZE));
+
+  useEffect(() => { setPaginaDisponibles(1); }, [buscarDisponibles]);
+  useEffect(() => { setPaginaAsignados(1); }, [buscarAsignados]);
+  useEffect(() => {
+    if (paginaDisponibles > paginasDisponibles) setPaginaDisponibles(paginasDisponibles);
+  }, [paginaDisponibles, paginasDisponibles]);
+  useEffect(() => {
+    if (paginaAsignados > paginasAsignados) setPaginaAsignados(paginasAsignados);
+  }, [paginaAsignados, paginasAsignados]);
+
+  const toggle = (id, activar) => {
+    const clean = [...new Set((value || []).map(Number).filter(Boolean))];
+    if (activar) onChange([...new Set([...clean, Number(id)])]);
+    else onChange(clean.filter((x) => x !== Number(id)));
+  };
+
+  const renderLista = ({ title, items, search, setSearch, page, setPage, checked }) => {
+    const start = (page - 1) * PAGE_SIZE;
+    const visibles = items.slice(start, start + PAGE_SIZE);
+
+    return (
+      <div className="overflow-hidden rounded-2xl border border-line bg-soft/45">
+        <div className="border-b border-line bg-white px-4 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="font-700 text-ink">{title}</p>
+            <span className="rounded-full bg-soft px-2.5 py-1 text-xs text-slate-500">{items.length}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2">
+            <Search size={15} className="text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={`Buscar en ${title.toLowerCase()}…`}
+              className="w-full bg-transparent text-sm text-ink outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="min-h-[340px] bg-white">
+          {visibles.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-slate-400">Sin permisos.</p>
+          ) : (
+            visibles.map((op, index) => (
+              <label
+                key={op.value}
+                className="flex cursor-pointer items-center gap-3 border-b border-line px-4 py-3 text-sm text-slate-700 last:border-b-0 hover:bg-soft/70"
+              >
+                <span className="w-7 shrink-0 font-mono text-[11px] text-slate-400">
+                  {String(start + index + 1).padStart(2, '0')}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => toggle(op.value, e.target.checked)}
+                  className="h-4 w-4 shrink-0 accent-primary-500"
+                />
+                <span className="min-w-0 flex-1">{op.label}</span>
+              </label>
+            ))
+          )}
+        </div>
+
+        <Pagination page={page} setPage={setPage} total={items.length} />
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <label className="mb-2 block font-mono text-xs uppercase tracking-wider text-slate-500">{label}</label>
+      <div className="grid gap-4 xl:grid-cols-2">
+        {renderLista({
+          title: 'No asignados',
+          items: disponiblesFiltrados,
+          search: buscarDisponibles,
+          setSearch: setBuscarDisponibles,
+          page: paginaDisponibles,
+          setPage: setPaginaDisponibles,
+          checked: false,
+        })}
+        {renderLista({
+          title: 'Asignados',
+          items: asignadosFiltrados,
+          search: buscarAsignados,
+          setSearch: setBuscarAsignados,
+          page: paginaAsignados,
+          setPage: setPaginaAsignados,
+          checked: true,
+        })}
+      </div>
+      <p className="mt-2 text-[11px] text-slate-400">
+        Marca un permiso en “No asignados” para moverlo a “Asignados”. Desmárcalo en “Asignados” para retirarlo.
+      </p>
+    </div>
+  );
+}
+
 function vacio(fields) {
   const o = {};
   fields.forEach((f) => {
-    if (f.type === 'multiselect') o[f.name] = [];
+    if (f.type === 'multiselect' || f.type === 'duallist') o[f.name] = [];
     else if (f.type === 'checkbox') o[f.name] = f.defaultValue ?? true;
     else o[f.name] = f.defaultValue ?? '';
   });
@@ -43,6 +212,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
   const [editId, setEditId] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [buscar, setBuscar] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [visiblePasswords, setVisiblePasswords] = useState({});
 
   const cargar = () => {
@@ -57,7 +227,11 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
     const f = {};
     fields.forEach((fl) => {
       const v = item[fl.name];
-      f[fl.name] = fl.type === 'multiselect' ? (Array.isArray(v) ? v : []) : fl.type === 'checkbox' ? !!v : (v ?? '');
+      f[fl.name] = (fl.type === 'multiselect' || fl.type === 'duallist')
+        ? (Array.isArray(v) ? v.map(Number) : [])
+        : fl.type === 'checkbox'
+          ? !!v
+          : (v ?? '');
     });
     setForm(f); setEditId(item.id); setError(''); setVisiblePasswords({});
   };
@@ -70,7 +244,9 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
       const payload = { ...form };
       fields.forEach((f) => {
         if (f.type === 'number') payload[f.name] = payload[f.name] === '' ? null : Number(payload[f.name]);
-        if (f.type === 'multiselect') payload[f.name] = (payload[f.name] || []).map((v)=>Number(v)).filter(Boolean);
+        if (f.type === 'multiselect' || f.type === 'duallist') {
+          payload[f.name] = (payload[f.name] || []).map((v)=>Number(v)).filter(Boolean);
+        }
         if (f.type === 'checkbox') payload[f.name] = !!payload[f.name];
       });
       if (editId) await api.update(editId,payload); else await api.create(payload);
@@ -87,6 +263,14 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
     const q = buscar.trim().toLowerCase();
     return !q || JSON.stringify(item).toLowerCase().includes(q);
   });
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+  useEffect(() => { setPagina(1); }, [buscar]);
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
+  const inicio = (pagina - 1) * PAGE_SIZE;
+  const visibles = filtrados.slice(inicio, inicio + PAGE_SIZE);
 
   const inputClass = 'w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100';
 
@@ -135,6 +319,13 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
                       {(f.options || []).map((op)=><option key={op.value} value={op.value}>{op.label}</option>)}
                     </select>
                   </>
+                ) : f.type === 'duallist' ? (
+                  <DualListField
+                    label={f.label}
+                    options={f.options || []}
+                    value={form[f.name] || []}
+                    onChange={(v) => set(f.name, v)}
+                  />
                 ) : f.type === 'multiselect' ? (
                   <>
                     <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-slate-500">{f.label}</label>
@@ -177,7 +368,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
                         aria-label={visiblePasswords[f.name] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                         title={visiblePasswords[f.name] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                       >
-                        {visiblePasswords[f.name] ? <EyeOff size={17}/> : <Eye size={17}/>}
+                        {visiblePasswords[f.name] ? <EyeOff size={17}/> : <Eye size={17}/>} 
                       </button>
                     </div>
                     {f.help && <p className="mt-1 text-[11px] text-slate-400">{f.help}</p>}
@@ -210,8 +401,9 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
             <span className="rounded-full bg-soft px-2.5 py-1 text-xs text-slate-500">{filtrados.length}</span>
           </div>
           {filtrados.length === 0 && <p className="p-6 text-sm text-slate-500">Sin registros.</p>}
-          {filtrados.map((item)=>(
+          {visibles.map((item, index)=>(
             <div key={item.id} className="flex items-center gap-4 border-b border-line px-5 py-4 last:border-0 hover:bg-soft/60">
+              <span className="w-7 shrink-0 font-mono text-[11px] text-slate-400">{String(inicio + index + 1).padStart(2, '0')}</span>
               <Miniatura src={item.foto_url || item.imagen_url || item.logo_url} id={item.id} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-600 text-ink">{label(item)}</p>
@@ -221,6 +413,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
               {canDelete && <button onClick={()=>borrar(item.id)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-red-200 hover:text-red-600"><Trash2 size={15}/></button>}
             </div>
           ))}
+          <Pagination page={pagina} setPage={setPagina} total={filtrados.length} />
         </div>
       )}
     </div>
