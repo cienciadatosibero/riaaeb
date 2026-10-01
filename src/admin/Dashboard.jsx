@@ -42,26 +42,29 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
   };
   useEffect(()=>{loadDeps();},[]); // eslint-disable-line
 
-  const navMain=[{id:'dashboard',label:'Dashboard',icon:LayoutDashboard,show:can('dashboard')}];
-  if(investigador||estudiante) navMain.push({id:'investigaciones',label:estudiante?'Proyectos para participar':'Mis proyectos',icon:FlaskConical,show:can('investigaciones')});
-  if(investigador) navMain.push({id:'publicaciones',label:'Publicaciones de la Red',icon:BookOpen,show:can('publicaciones')},{id:'perfil',label:'Mi perfil',icon:UserRound,show:can('perfil')});
+  // La visibilidad del panel depende de los permisos efectivos.
+  // El rol solo cambia etiquetas/contexto; ya no bloquea módulos que sí fueron autorizados.
+  const navMain=[
+    {id:'dashboard',label:'Dashboard',icon:LayoutDashboard,show:can('dashboard','lectura')},
+    {id:'investigaciones',label:estudiante?'Proyectos para participar':investigador?'Mis proyectos':'Investigaciones',icon:FlaskConical,show:can('investigaciones','lectura')},
+    {id:'publicaciones',label:'Publicaciones de la Red',icon:BookOpen,show:can('publicaciones','lectura')},
+    {id:'perfil',label:'Mi perfil',icon:UserRound,show:can('perfil','lectura')},
+  ];
 
   const catalogs=[
-    {id:'investigaciones',label:'Investigaciones',icon:FlaskConical,show:admin&&can('investigaciones')},
-    {id:'instituciones',label:'Instituciones',icon:Building2,show:admin&&can('instituciones')},
-    {id:'areas',label:'Áreas de conocimiento',icon:Shapes,show:admin&&can('areas_conocimiento')},
-    {id:'tipos',label:'Tipos de investigaciones',icon:Tags,show:admin&&can('tipos_investigacion')},
+    {id:'instituciones',label:'Instituciones',icon:Building2,show:can('instituciones','lectura')},
+    {id:'areas',label:'Áreas de conocimiento',icon:Shapes,show:can('areas_conocimiento','lectura')},
+    {id:'tipos',label:'Tipos de investigaciones',icon:Tags,show:can('tipos_investigacion','lectura')},
   ];
   const content=[
-    {id:'publicaciones',label:'Publicaciones de la Red',icon:BookOpen,show:admin&&can('publicaciones')},
-    {id:'noticias',label:'Noticias',icon:Newspaper,show:admin&&can('noticias')},
-    {id:'about',label:'Quiénes somos',icon:Info,show:admin&&can('about')},
+    {id:'noticias',label:'Noticias',icon:Newspaper,show:can('noticias','lectura')},
+    {id:'about',label:'Quiénes somos',icon:Info,show:can('about','lectura')},
   ];
   const security=[
-    {id:'modulos',label:'Módulos',icon:Puzzle,show:admin&&can('seguridad_modulos')},
-    {id:'permisos',label:'Permisos',icon:KeyRound,show:admin&&can('seguridad_permisos')},
-    {id:'roles',label:'Roles',icon:UserCog,show:admin&&can('seguridad_roles')},
-    {id:'usuarios',label:'Usuarios',icon:Users,show:admin&&can('seguridad_usuarios')},
+    {id:'modulos',label:'Módulos',icon:Puzzle,show:can('seguridad_modulos','lectura')},
+    {id:'permisos',label:'Permisos',icon:KeyRound,show:can('seguridad_permisos','lectura')},
+    {id:'roles',label:'Roles',icon:UserCog,show:can('seguridad_roles','lectura')},
+    {id:'usuarios',label:'Usuarios',icon:Users,show:can('seguridad_usuarios','lectura')},
   ];
 
   const opcionesVisibles = [
@@ -125,21 +128,21 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     }
     if(tab==='dashboard') return <NetworkDashboard session={session}/>;
     if(tab==='investigaciones') return <ProjectsManager session={session}/>;
-    if(tab==='perfil') return <ProfileEditor onSaved={async()=>{try{onSessionChange(await getMe());}catch{}}}/>;
-    if(tab==='publicaciones') return <ResourceManager titulo="Publicaciones de la Red" api={adminPublicaciones} label={(i)=>i.titulo} fields={publicationFields} subtitle={admin?'Administra todos los productos generados con miembros de la Red.':'Registra los productos académicos y tecnológicos generados con miembros de la Red.'}/>;
-    if(tab==='instituciones') return <ResourceManager titulo="Instituciones" api={adminInstituciones} label={(i)=>i.nombre} fields={[
+    if(tab==='perfil') return <ProfileEditor session={session} canEdit={can('perfil','actualizar')} onSaved={async()=>{try{onSessionChange(await getMe());}catch{}}}/>;
+    if(tab==='publicaciones') return <ResourceManager titulo="Publicaciones de la Red" api={adminPublicaciones} label={(i)=>i.titulo} fields={publicationFields} canCreate={can('publicaciones','escritura')} canEdit={can('publicaciones','actualizar')} canDelete={can('publicaciones','eliminar')} subtitle={admin?'Administra todos los productos generados con miembros de la Red.':'Registra los productos académicos y tecnológicos generados con miembros de la Red.'}/>;
+    if(tab==='instituciones') return <ResourceManager titulo="Instituciones" api={adminInstituciones} label={(i)=>i.nombre} canCreate={can('instituciones','escritura')} canEdit={can('instituciones','actualizar')} canDelete={can('instituciones','eliminar')} fields={[
       {name:'nombre',label:'Nombre',type:'text',required:true,full:true},{name:'logo_url',label:'Logo',type:'file',full:true},{name:'enlace',label:'Enlace',type:'url'},{name:'orden',label:'Orden',type:'number'}]}/>;
-    if(tab==='areas') return <ResourceManager titulo="Áreas de conocimiento" api={adminAreas} label={(i)=>i.nombre} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
-    if(tab==='tipos') return <ResourceManager titulo="Tipos de investigaciones" api={adminTiposInvestigacion} label={(i)=>i.nombre} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
-    if(tab==='noticias') return <ResourceManager titulo="Noticias" api={adminNoticias} label={(i)=>i.titulo} fields={[
+    if(tab==='areas') return <ResourceManager titulo="Áreas de conocimiento" api={adminAreas} label={(i)=>i.nombre} canCreate={can('areas_conocimiento','escritura')} canEdit={can('areas_conocimiento','actualizar')} canDelete={can('areas_conocimiento','eliminar')} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
+    if(tab==='tipos') return <ResourceManager titulo="Tipos de investigaciones" api={adminTiposInvestigacion} label={(i)=>i.nombre} canCreate={can('tipos_investigacion','escritura')} canEdit={can('tipos_investigacion','actualizar')} canDelete={can('tipos_investigacion','eliminar')} fields={[{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]}/>;
+    if(tab==='noticias') return <ResourceManager titulo="Noticias" api={adminNoticias} label={(i)=>i.titulo} canCreate={can('noticias','escritura')} canEdit={can('noticias','actualizar')} canDelete={can('noticias','eliminar')} fields={[
       {name:'titulo',label:'Título',type:'text',required:true,full:true},{name:'extracto',label:'Extracto',type:'textarea',required:true,full:true},{name:'contenido',label:'Contenido',type:'textarea',required:true,full:true},{name:'categoria',label:'Categoría',type:'text'},{name:'fecha',label:'Fecha',type:'date',required:true},{name:'imagen_url',label:'Imagen',type:'file',full:true}]}/>;
     if(tab==='about') return <AboutEditor/>;
-    if(tab==='modulos') return <ResourceManager titulo="Seguridad · Módulos" api={seguridadModulos} label={(i)=>i.nombre} fields={[{name:'clave',label:'Clave',type:'text',required:true},{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Catálogo de todos los módulos que integran el sistema."/>;
-    if(tab==='permisos') return <ResourceManager titulo="Seguridad · Permisos" api={seguridadPermisos} label={(i)=>`${i.modulo} · ${i.accion}`} fields={[
+    if(tab==='modulos') return <ResourceManager titulo="Seguridad · Módulos" api={seguridadModulos} label={(i)=>i.nombre} canCreate={can('seguridad_modulos','escritura')} canEdit={can('seguridad_modulos','actualizar')} canDelete={can('seguridad_modulos','eliminar')} fields={[{name:'clave',label:'Clave',type:'text',required:true},{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Catálogo de todos los módulos que integran el sistema."/>;
+    if(tab==='permisos') return <ResourceManager titulo="Seguridad · Permisos" api={seguridadPermisos} label={(i)=>`${i.modulo} · ${i.accion}`} canCreate={can('seguridad_permisos','escritura')} canEdit={can('seguridad_permisos','actualizar')} canDelete={can('seguridad_permisos','eliminar')} fields={[
       {name:'modulo_id',label:'Módulo',type:'select',required:true,options:deps.modules.map((x)=>({value:x.id,label:x.nombre}))},{name:'accion',label:'Permiso',type:'select',required:true,options:['lectura','escritura','actualizar','eliminar'].map((x)=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Permisos de lectura, escritura, actualización y eliminación asociados a cada módulo."/>;
-    if(tab==='roles') return <ResourceManager titulo="Seguridad · Roles" api={seguridadRoles} label={(i)=>i.nombre} fields={[
+    if(tab==='roles') return <ResourceManager titulo="Seguridad · Roles" api={seguridadRoles} label={(i)=>i.nombre} canCreate={can('seguridad_roles','escritura')} canEdit={can('seguridad_roles','actualizar')} canDelete={can('seguridad_roles','eliminar')} fields={[
       {name:'clave',label:'Clave',type:'text',required:true},{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'permiso_ids',label:'Permisos asociados',type:'duallist',full:true,options:deps.permissions.map((x)=>({value:x.id,label:`${x.modulo} · ${x.accion}`}))},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Cada rol controla qué opciones y acciones puede visualizar y utilizar."/>;
-    if(tab==='usuarios') return <ResourceManager titulo="Seguridad · Usuarios" api={seguridadUsuarios} label={(i)=>`${i.nombre_completo}${i.activo?'':' · PENDIENTE DE ACTIVACIÓN'}`} fields={userFields} subtitle="Activa registros públicos, asigna uno o más roles y administra el perfil de investigadores y estudiantes."/>;
+    if(tab==='usuarios') return <ResourceManager titulo="Seguridad · Usuarios" api={seguridadUsuarios} label={(i)=>`${i.nombre_completo}${i.activo?'':' · PENDIENTE DE ACTIVACIÓN'}`} fields={userFields} canCreate={can('seguridad_usuarios','escritura')} canEdit={can('seguridad_usuarios','actualizar')} canDelete={can('seguridad_usuarios','eliminar')} subtitle="Activa registros públicos, asigna uno o más roles y administra el perfil de investigadores y estudiantes."/>;
     return null;
   };
 
@@ -147,7 +150,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
   const Group=({title,items,open,setOpen})=>items.some((x)=>x.show)?<div className="mt-5"><button onClick={()=>setOpen(!open)} className="mb-1 flex w-full items-center justify-between px-3 text-[10px] font-700 uppercase tracking-[.18em] text-slate-500"><span>{title}</span>{open?<ChevronDown size={13}/>:<ChevronRight size={13}/>}</button>{open&&<div className="space-y-1">{items.map((i)=><NavButton key={i.id} item={i}/>)}</div>}</div>:null;
   const Sidebar=()=> <aside className="flex h-full w-[270px] flex-col bg-[#172033] p-4 text-white">
     <div className="flex items-center gap-3 border-b border-white/10 px-2 pb-5"><LogoMark size={36}/><div><p className="font-display text-lg font-700 tracking-wide">RIA<span className="text-primary-400">AEB</span></p><p className="text-[10px] uppercase tracking-[.16em] text-slate-400">Gestión de la Red</p></div></div>
-    <nav className="mt-5 flex-1 overflow-y-auto pr-1"><div className="space-y-1">{navMain.filter((x)=>x.show).map((i)=><NavButton key={i.id} item={i}/>)}</div>{admin&&<><Group title="Catálogos" items={catalogs} open={catOpen} setOpen={setCatOpen}/><Group title="Contenido" items={content} open={contentOpen} setOpen={setContentOpen}/><Group title="Seguridad" items={security} open={secOpen} setOpen={setSecOpen}/></>}</nav>
+    <nav className="mt-5 flex-1 overflow-y-auto pr-1"><div className="space-y-1">{navMain.filter((x)=>x.show).map((i)=><NavButton key={i.id} item={i}/>)}</div><Group title="Catálogos" items={catalogs} open={catOpen} setOpen={setCatOpen}/><Group title="Contenido" items={content} open={contentOpen} setOpen={setContentOpen}/><Group title="Seguridad" items={security} open={secOpen} setOpen={setSecOpen}/></nav>
     <div className="space-y-1 border-t border-white/10 pt-4"><Link to="/" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white"><ExternalLink size={16}/>Ver sitio público</Link><button onClick={()=>setConfirmar(true)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 hover:bg-red-500/15 hover:text-red-300"><LogOut size={16}/>Cerrar sesión</button></div>
   </aside>;
 
