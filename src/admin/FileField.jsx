@@ -63,8 +63,14 @@ export default function FileField({ label, value, onChange, publicUpload = false
 
       <div className="flex items-center gap-3">
         {value && (
-          <img src={value} alt="vista previa"
-            className="h-14 w-14 shrink-0 rounded-lg border border-line bg-white object-contain" />
+          <img
+            src={value}
+            alt="vista previa"
+            className="h-14 w-14 shrink-0 rounded-lg border border-line bg-white object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
         )}
         <div className="flex-1">
           {modoUrl ? (

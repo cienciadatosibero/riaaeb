@@ -3,6 +3,28 @@ import { Plus, Pencil, Trash2, X, Loader2, Save, Search, Eye, EyeOff } from 'luc
 import FileField from './FileField.jsx';
 import AdminLoader from './AdminLoader.jsx';
 
+
+function Miniatura({ src, id }) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-50 font-mono text-xs font-700 text-primary-600">
+        #{id}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      className="h-12 w-12 shrink-0 rounded-xl border border-line bg-white object-contain"
+      onError={() => setError(true)}
+    />
+  );
+}
+
 function vacio(fields) {
   const o = {};
   fields.forEach((f) => {
@@ -190,8 +212,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
           {filtrados.length === 0 && <p className="p-6 text-sm text-slate-500">Sin registros.</p>}
           {filtrados.map((item)=>(
             <div key={item.id} className="flex items-center gap-4 border-b border-line px-5 py-4 last:border-0 hover:bg-soft/60">
-              {item.foto_url || item.imagen_url || item.logo_url ? <img src={item.foto_url || item.imagen_url || item.logo_url} alt="" className="h-12 w-12 shrink-0 rounded-xl border border-line bg-white object-contain"/> :
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-50 font-mono text-xs font-700 text-primary-600">#{item.id}</span>}
+              <Miniatura src={item.foto_url || item.imagen_url || item.logo_url} id={item.id} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-600 text-ink">{label(item)}</p>
                 <p className="mt-0.5 truncate text-xs text-slate-500">{item.descripcion || item.roles?.join?.(', ') || item.rol || item.autores || item.clave || item.categoria || item.enlace || ''}</p>
