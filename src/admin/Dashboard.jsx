@@ -20,12 +20,17 @@ import {
 const gradoOptions=['Licenciatura','Especialidad','Maestría','Doctorado','Posdoctorado'].map((x)=>({value:x,label:x}));
 const sniiOptions=['Sin nivel','Candidato','Nivel I','Nivel II','Nivel III','Emérito'].map((x)=>({value:x,label:x}));
 
-export default function Dashboard({ session, onSessionChange, onLogout }) {
+export default function Dashboard({ session, onSessionChange, onRefreshSession, onLogout }) {
   const [tab,setTab]=useState('dashboard'); const [confirmar,setConfirmar]=useState(false); const [mobile,setMobile]=useState(false);
   const [secOpen,setSecOpen]=useState(true); const [catOpen,setCatOpen]=useState(true); const [contentOpen,setContentOpen]=useState(true);
   const [deps,setDeps]=useState({modules:[],permissions:[],roles:[],areas:[],instituciones:[]});
-  const roles=session?.roles||[]; const admin=roles.includes('administrador'); const investigador=roles.includes('investigador'); const estudiante=roles.includes('estudiante');
-  const can=(m,a='lectura')=>admin || (session?.permissions||[]).includes('*') || (session?.permissions||[]).includes(`${m}.${a}`);
+  const norm=(v)=>String(v ?? '').trim().toLowerCase();
+  const roles=(session?.roles||[]).map(norm);
+  const permisos=(session?.permissions||[]).map(norm);
+  const admin=roles.includes('administrador');
+  const investigador=roles.includes('investigador');
+  const estudiante=roles.includes('estudiante');
+  const can=(m,a='lectura')=>admin || permisos.includes('*') || permisos.includes(`${norm(m)}.${norm(a)}`);
 
   const loadDeps=async()=>{
     try {
@@ -59,6 +64,20 @@ export default function Dashboard({ session, onSessionChange, onLogout }) {
     {id:'usuarios',label:'Usuarios',icon:Users,show:admin&&can('seguridad_usuarios')},
   ];
 
+  const opcionesVisibles = [
+    ...navMain,
+    ...catalogs,
+    ...content,
+    ...security,
+  ].filter((x) => x.show);
+
+  useEffect(() => {
+    const actualVisible = opcionesVisibles.some((x) => x.id === tab);
+    if (!actualVisible && opcionesVisibles.length) {
+      setTab(opcionesVisibles[0].id);
+    }
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const publicationFields=[
     {name:'titulo',label:'Título',type:'text',required:true,full:true},
     {name:'resumen',label:'Resumen / descripción',type:'textarea',full:true,maxLength:1200},
@@ -89,6 +108,21 @@ export default function Dashboard({ session, onSessionChange, onLogout }) {
   ],[deps]);
 
   const render=()=>{
+    if (!admin && opcionesVisibles.length === 0) {
+      return <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+        <h2 className="font-display text-xl font-700 text-amber-900">Permisos todavía no disponibles</h2>
+        <p className="mt-2 text-sm text-amber-800">
+          Tu rol está asignado, pero esta sesión aún no está recibiendo permisos activos desde la base.
+        </p>
+        <button
+          type="button"
+          onClick={()=>onRefreshSession?.()}
+          className="mt-4 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-600 text-white hover:bg-primary-600"
+        >
+          Actualizar permisos
+        </button>
+      </div>;
+    }
     if(tab==='dashboard') return <NetworkDashboard session={session}/>;
     if(tab==='investigaciones') return <ProjectsManager session={session}/>;
     if(tab==='perfil') return <ProfileEditor onSaved={async()=>{try{onSessionChange(await getMe());}catch{}}}/>;
