@@ -182,6 +182,10 @@ export default function Investigadores() {
     };
   };
 
+  // Si todavía no existen usuarios activos con rol Investigador,
+  // no mostramos una sección vacía en la portada.
+  if (estado === 'listo' && n === 0) return null;
+
   return (
     <section id="investigadores" className="relative overflow-hidden border-t border-line bg-soft py-24">
       <div className="glow-bg pointer-events-none absolute inset-0 opacity-60" />
