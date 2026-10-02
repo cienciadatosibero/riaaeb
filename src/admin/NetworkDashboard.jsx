@@ -48,7 +48,7 @@ export default function NetworkDashboard({ session }) {
     </div>
 
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <Metric icon={Users} label="Investigadores registrados" value={t.investigadores}/>
+      <Metric icon={Users} label="Investigadores registrados" value={t.investigadores} hint={`${t.estudiantes||0} estudiante${Number(t.estudiantes)===1?'':'s'} en la Red`}/>
       <Metric icon={FlaskConical} label="Proyectos de investigación" value={t.proyectos}/>
       <Metric icon={BookOpen} label="Publicaciones de la Red" value={t.publicaciones}/>
       {admin ? <Metric icon={UserCheck} label="Registros por aprobar" value={t.registros_pendientes} hint="Actívalos en Seguridad · Usuarios"/> : <Metric icon={CircleDot} label="Proyectos terminados" value={t.terminados}/>} 

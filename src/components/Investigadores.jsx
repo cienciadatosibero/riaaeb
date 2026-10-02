@@ -33,7 +33,7 @@ function Card({ p, frente, onAbrir }) {
       <div className="flex h-[38%] flex-col p-4">
         <h3 className="font-display text-lg font-700 leading-tight text-ink">{p.nombre}</h3>
         <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
-          {p.rol}{p.area ? ` · ${p.area}` : ''}
+          {p.categoria_red || p.rol}{p.area ? ` · ${p.area}` : ''}
         </p>
         <div className="mt-auto flex items-center justify-between">
           <span className="inline-flex items-center gap-1 truncate pr-2 text-xs text-slate-500">
@@ -97,7 +97,7 @@ function Modal({ p, onClose, onPrev, onNext }) {
             <X size={18} />
           </button>
 
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-500">Investigador</p>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-500">{p.categoria_red || (p.tipo_perfil === 'estudiante' ? 'Estudiante de la Red' : 'Investigador de la Red')}</p>
           {p.area && <p className="mt-2 inline-flex w-fit rounded-full bg-primary-50 px-3 py-1 text-xs font-600 text-primary-700">{p.area}</p>}
 
           <p className="mt-4 text-sm leading-relaxed text-slate-600">{p.bio}</p>
@@ -182,10 +182,6 @@ export default function Investigadores() {
     };
   };
 
-  // Si todavía no existen usuarios activos con rol Investigador,
-  // no mostramos una sección vacía en la portada.
-  if (estado === 'listo' && n === 0) return null;
-
   return (
     <section id="investigadores" className="relative overflow-hidden border-t border-line bg-soft py-24">
       <div className="glow-bg pointer-events-none absolute inset-0 opacity-60" />
@@ -193,8 +189,8 @@ export default function Investigadores() {
         <SectionTitle
           index="04"
           eyebrow="Red académica"
-          title="Investigadores de la Red"
-          subtitle="Un equipo interdisciplinario que combina ingeniería, ciencia de datos, salud y ciencias sociales para construir tecnología con impacto."
+          title="Personas de la Red"
+          subtitle="Investigadores, docentes y estudiantes que participan en la Red y colaboran en sus proyectos."
         />
 
         {estado === 'cargando' && (
@@ -205,7 +201,7 @@ export default function Investigadores() {
 
         {estado === 'error' && (
           <p className="mt-12 rounded-xl border border-primary-200 bg-primary-50 p-6 text-sm text-primary-700">
-            No pudimos cargar a los Investigadores de la Red. Verifica que el backend esté en ejecución.
+            No pudimos cargar a las Personas de la Red. Verifica que el backend esté en ejecución.
           </p>
         )}
 
@@ -249,7 +245,7 @@ export default function Investigadores() {
                 </button>
                 <div className="flex gap-2">
                   {personas.map((_, i) => (
-                    <button key={i} onClick={() => { ir(i); detener(); }} aria-label={`Investigador ${i + 1}`}
+                    <button key={i} onClick={() => { ir(i); detener(); }} aria-label={`Persona ${i + 1}`}
                       className={`h-1.5 rounded-full transition-all duration-300 ${i === activo ? 'w-8 bg-primary-500' : 'w-2.5 bg-line hover:bg-primary-200'}`} />
                   ))}
                 </div>

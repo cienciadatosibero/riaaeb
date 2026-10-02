@@ -99,7 +99,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
   ];
   const personFields=useMemo(()=>[
     {name:'nombre',label:'Nombre completo',type:'text',required:true,full:true},
-    {name:'rol',label:'Cargo / rol público',type:'text',defaultValue:'Profesor / Investigador'},
+    {name:'rol',label:'Cargo / función pública',type:'text',defaultValue:''},
     {name:'correo_institucional',label:'Correo institucional',type:'email'},
     {name:'telefono',label:'Teléfono',type:'text'},
     {name:'area_ids',label:'Áreas de conocimiento (una o más)',type:'multiselect',full:true,options:deps.areas.map((x)=>({value:x.id,label:x.nombre}))},
@@ -156,7 +156,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     if(tab==='investigaciones') return <ProjectsManager session={session}/>;
     if(tab==='perfil') return <ProfileEditor session={session} canEdit={can('perfil','actualizar')} onSaved={async()=>{try{onSessionChange(await getMe());}catch{}}}/>;
     if(tab==='portada') return <PortadaEditor canEdit={can('portada','actualizar')}/>;
-    if(tab==='personas') return <ResourceManager titulo="Investigadores de la Red" api={adminInvestigadores} label={(i)=>i.nombre} fields={personFields} canCreate={false} canEdit={can('investigadores','actualizar')} canDelete={false} subtitle="Aquí aparecen automáticamente los usuarios activos que tengan asignado el rol Investigador. Para agregar o retirar integrantes de la Red usa Seguridad · Usuarios; aquí solo editas su información pública."/>;
+    if(tab==='personas') return <ResourceManager titulo="Personas de la Red" api={adminInvestigadores} label={(i)=>i.nombre} fields={personFields} canCreate={false} canEdit={can('investigadores','actualizar')} canDelete={false} subtitle="Aquí aparecen automáticamente los usuarios activos con rol Investigador o Estudiante. Para agregar o retirar integrantes usa Seguridad · Usuarios; aquí solo editas su información pública."/>;
     if(tab==='publicaciones') return <ResourceManager titulo="Publicaciones de la Red" api={adminPublicaciones} label={(i)=>i.titulo} fields={publicationFields} canCreate={can('publicaciones','escritura')} canEdit={can('publicaciones','actualizar')} canDelete={can('publicaciones','eliminar')} subtitle={admin?'Administra todos los productos generados con miembros de la Red.':'Registra los productos académicos y tecnológicos generados con miembros de la Red.'}/>;
     if(tab==='instituciones') return <ResourceManager titulo="Instituciones" api={adminInstituciones} label={(i)=>i.nombre} canCreate={can('instituciones','escritura')} canEdit={can('instituciones','actualizar')} canDelete={can('instituciones','eliminar')} fields={[
       {name:'nombre',label:'Nombre',type:'text',required:true,full:true},{name:'logo_url',label:'Logo',type:'file',full:true},{name:'enlace',label:'Enlace',type:'url'},{name:'orden',label:'Orden',type:'number'}]}/>;
