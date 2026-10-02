@@ -20,6 +20,47 @@ const estadoUI={
   respondido:{label:'Respondido',dot:'bg-emerald-500',pill:'bg-emerald-50 text-emerald-700'},
 };
 
+
+function urlCorreoWeb(correo, asunto, cuerpo) {
+  const email = String(correo || '').trim();
+  const dominio = (email.split('@')[1] || '').toLowerCase();
+
+  const to = encodeURIComponent(email);
+  const su = encodeURIComponent(asunto || '');
+  const body = encodeURIComponent(cuerpo || '');
+
+  // Gmail / Google Workspace
+  if (dominio === 'gmail.com' || dominio === 'googlemail.com') {
+    return {
+      proveedor: 'Gmail',
+      url: `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}&body=${body}`,
+    };
+  }
+
+  // Outlook / Hotmail / Live / MSN
+  if (['outlook.com', 'hotmail.com', 'live.com', 'msn.com'].includes(dominio)) {
+    return {
+      proveedor: 'Outlook',
+      url: `https://outlook.office.com/mail/deeplink/compose?to=${to}&subject=${su}&body=${body}`,
+    };
+  }
+
+  // Yahoo
+  if (dominio === 'yahoo.com' || dominio === 'yahoo.com.mx') {
+    return {
+      proveedor: 'Yahoo Mail',
+      url: `https://compose.mail.yahoo.com/?to=${to}&subject=${su}&body=${body}`,
+    };
+  }
+
+  // Si el dominio es institucional o no reconocido, usar el cliente
+  // configurado en el equipo/navegador.
+  return {
+    proveedor: 'tu aplicación de correo',
+    url: `mailto:${email}?subject=${su}&body=${body}`,
+  };
+}
+
 export default function ContactMessages({ canUpdate=false, canDelete=false }) {
   const [items,setItems]=useState([]);
   const [estado,setEstado]=useState('cargando');
@@ -33,6 +74,7 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
   const [confirmDelete,setConfirmDelete]=useState(null);
   const [confirmMail,setConfirmMail]=useState(false);
   const [confirmRespondido,setConfirmRespondido]=useState(false);
+  const [proveedorCorreo,setProveedorCorreo]=useState('tu correo');
 
   const cargar=()=>{
     setEstado('cargando');
@@ -94,6 +136,11 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
 
   const prepararCorreo=()=>{
     if(!respuesta.trim()) return setError('Escribe la respuesta antes de abrir el correo.');
+
+    const asunto=`Re: ${String(abierto?.asunto||'Mensaje de contacto').trim()}`;
+    const destino=urlCorreoWeb(abierto?.correo,asunto,respuesta.trim());
+
+    setProveedorCorreo(destino.proveedor);
     setError('');
     setConfirmMail(true);
   };
@@ -103,20 +150,28 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
     setProcesando(true);
     setError('');
     setOk('');
+
     try{
-      // Primero guardamos exactamente lo que escribió la persona.
+      // Primero guardamos exactamente la respuesta escrita por la persona.
       const data=await guardarRespuestaContacto(abierto.id,respuesta.trim());
       actualizarLocal(data);
 
-      const para=String(abierto.correo||'').trim();
       const asunto=`Re: ${String(abierto.asunto||'Mensaje de contacto').trim()}`;
-      const cuerpo=respuesta.trim();
-
-      const mailto=`mailto:${encodeURIComponent(para)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+      const destino=urlCorreoWeb(abierto.correo,asunto,respuesta.trim());
 
       setConfirmMail(false);
-      setOk('Se abrió tu correo con el destinatario, asunto y respuesta. Revísalo y envíalo tú.');
-      window.location.href=mailto;
+      setOk(`Se abrió ${destino.proveedor} con el correo, asunto y respuesta preparados. Revísalo y presiona Enviar.`);
+
+      if (destino.url.startsWith('mailto:')) {
+        window.location.href = destino.url;
+      } else {
+        const nueva = window.open(destino.url, '_blank', 'noopener,noreferrer');
+
+        // Si el navegador bloquea la pestaña emergente, abrir en la misma pestaña.
+        if (!nueva) {
+          window.location.href = destino.url;
+        }
+      }
     }catch(e){
       setError(e.message);
     }finally{
