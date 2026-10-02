@@ -76,7 +76,7 @@ export const getMensajesContacto = () => request('/contacto/admin', { auth:true 
 export const marcarMensajeContacto = (id,leido=true) => request(`/contacto/${id}/leido`, { method:'PUT', auth:true, body:JSON.stringify({leido}) });
 export const eliminarMensajeContacto = (id) => request(`/contacto/${id}`, { method:'DELETE', auth:true });
 export const guardarRespuestaContacto = (id,respuesta) => request(`/contacto/${id}/respuesta`, { method:'PUT', auth:true, body:JSON.stringify({respuesta}) });
-export const responderMensajeContacto = (id,respuesta) => request(`/contacto/${id}/responder`, { method:'POST', auth:true, body:JSON.stringify({respuesta}) });
+export const marcarRespondidoContacto = (id,respuesta) => request(`/contacto/${id}/respondido`, { method:'PUT', auth:true, body:JSON.stringify({respuesta}) });
 
 // Seguridad
 export const seguridadModulos = crud('seguridad/modulos','');
