@@ -9,6 +9,7 @@ import {
 } from '../lib/api.js';
 import AdminLoader from './AdminLoader.jsx';
 import Portal from '../components/ui/Portal.jsx';
+import ConfirmModal from '../components/ui/ConfirmModal.jsx';
 
 const PAGE_SIZE=10;
 
@@ -29,6 +30,9 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
   const [respuesta,setRespuesta]=useState('');
   const [enviando,setEnviando]=useState(false);
   const [ok,setOk]=useState('');
+  const [confirmDelete,setConfirmDelete]=useState(null);
+  const [confirmSend,setConfirmSend]=useState(false);
+  const [eliminando,setEliminando]=useState(false);
 
   const cargar=()=>{
     setEstado('cargando');
@@ -63,10 +67,25 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
     }
   };
 
-  const borrar=async(id)=>{
-    if(!window.confirm('¿Eliminar este mensaje?'))return;
-    try{await eliminarMensajeContacto(id);setItems((a)=>a.filter((x)=>x.id!==id));if(abierto?.id===id)setAbierto(null);}
-    catch(e){setError(e.message);}
+  const borrar=(item)=>{
+    setError('');
+    setConfirmDelete(item);
+  };
+
+  const confirmarBorrado=async()=>{
+    if(!confirmDelete)return;
+    setEliminando(true);
+    setError('');
+    try{
+      await eliminarMensajeContacto(confirmDelete.id);
+      setItems((a)=>a.filter((x)=>x.id!==confirmDelete.id));
+      if(abierto?.id===confirmDelete.id)setAbierto(null);
+      setConfirmDelete(null);
+    }catch(e){
+      setError(e.message);
+    }finally{
+      setEliminando(false);
+    }
   };
 
   const guardar=async()=>{
@@ -78,14 +97,25 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
     }catch(e){setError(e.message);}finally{setEnviando(false);}
   };
 
-  const enviar=async()=>{
+  const enviar=()=>{
     if(!respuesta.trim()) return setError('Escribe una respuesta antes de enviarla.');
-    if(!window.confirm(`¿Enviar esta respuesta a ${abierto.correo}?`))return;
+    setError('');
+    setConfirmSend(true);
+  };
+
+  const confirmarEnvio=async()=>{
+    if(!abierto)return;
     setEnviando(true); setError(''); setOk('');
     try{
       const data=await responderMensajeContacto(abierto.id,respuesta.trim());
-      actualizarLocal(data); setOk('Respuesta enviada por correo y guardada en el sistema.');
-    }catch(e){setError(e.message);}finally{setEnviando(false);}
+      actualizarLocal(data);
+      setOk('Respuesta enviada por correo y guardada en el sistema.');
+      setConfirmSend(false);
+    }catch(e){
+      setError(e.message);
+    }finally{
+      setEnviando(false);
+    }
   };
 
   if(estado==='cargando') return <AdminLoader texto="Cargando mensajes…"/>;
@@ -114,7 +144,7 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
             <p className="mt-0.5 truncate text-xs text-slate-500">{x.nombre} · {x.correo}</p>
           </div>
           <button onClick={()=>leer(x)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-primary-300 hover:text-primary-600" title="Ver / responder"><Eye size={15}/></button>
-          {canDelete&&<button onClick={()=>borrar(x.id)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-red-200 hover:text-red-600" title="Eliminar"><Trash2 size={15}/></button>}
+          {canDelete&&<button onClick={()=>borrar(x)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-red-200 hover:text-red-600" title="Eliminar"><Trash2 size={15}/></button>}
         </div>;
       })}
       {pages>1&&<div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
@@ -122,6 +152,30 @@ export default function ContactMessages({ canUpdate=false, canDelete=false }) {
         <div className="flex gap-1">{Array.from({length:pages},(_,i)=>i+1).map((n)=><button key={n} onClick={()=>setPagina(n)} className={`h-8 min-w-8 rounded-lg border px-2 text-xs font-700 ${n===pagina?'border-primary-500 bg-primary-500 text-white':'border-line bg-white text-slate-500'}`}>{n}</button>)}</div>
       </div>}
     </div>
+
+    <ConfirmModal
+      open={!!confirmDelete}
+      title="Eliminar mensaje"
+      message={confirmDelete ? `¿Deseas eliminar el mensaje “${confirmDelete.asunto}” de ${confirmDelete.nombre}? Esta acción no se puede deshacer.` : ''}
+      confirmText="Sí, eliminar"
+      cancelText="Cancelar"
+      tone="danger"
+      loading={eliminando}
+      onClose={()=>!eliminando&&setConfirmDelete(null)}
+      onConfirm={confirmarBorrado}
+    />
+
+    <ConfirmModal
+      open={confirmSend}
+      title="Enviar respuesta"
+      message={abierto ? `La respuesta se enviará por correo a ${abierto.correo}. ¿Deseas continuar?` : ''}
+      confirmText="Enviar respuesta"
+      cancelText="Cancelar"
+      tone="primary"
+      loading={enviando}
+      onClose={()=>!enviando&&setConfirmSend(false)}
+      onConfirm={confirmarEnvio}
+    />
 
     {abierto&&<Portal><div className="fixed inset-0 z-[170] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink/55 backdrop-blur-sm" onClick={()=>setAbierto(null)}/>

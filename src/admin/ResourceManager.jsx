@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import FileField from './FileField.jsx';
 import AdminLoader from './AdminLoader.jsx';
+import ConfirmModal from '../components/ui/ConfirmModal.jsx';
 
 const PAGE_SIZE = 10;
 
@@ -214,6 +215,8 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
   const [buscar, setBuscar] = useState('');
   const [pagina, setPagina] = useState(1);
   const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const cargar = () => {
     setEstado('cargando');
@@ -254,9 +257,24 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
     } catch (err) { setError(err.message); } finally { setGuardando(false); }
   };
 
-  const borrar = async (id) => {
-    if (!window.confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
-    try { await api.remove(id); cargar(); } catch (err) { setError(err.message); }
+  const borrar = (item) => {
+    setError('');
+    setConfirmDelete(item);
+  };
+
+  const confirmarBorrado = async () => {
+    if (!confirmDelete) return;
+    setEliminando(true);
+    setError('');
+    try {
+      await api.remove(confirmDelete.id);
+      setConfirmDelete(null);
+      cargar();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setEliminando(false);
+    }
   };
 
   const filtrados = items.filter((item) => {
@@ -410,12 +428,26 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
                 <p className="mt-0.5 truncate text-xs text-slate-500">{item.descripcion || item.roles?.join?.(', ') || item.rol || item.autores || item.clave || item.categoria || item.enlace || ''}</p>
               </div>
               {canEdit && <button onClick={()=>editar(item)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-primary-300 hover:text-primary-600"><Pencil size={15}/></button>}
-              {canDelete && <button onClick={()=>borrar(item.id)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-red-200 hover:text-red-600"><Trash2 size={15}/></button>}
+              {canDelete && <button onClick={()=>borrar(item)} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:border-red-200 hover:text-red-600"><Trash2 size={15}/></button>}
             </div>
           ))}
           <Pagination page={pagina} setPage={setPagina} total={filtrados.length} />
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title="Eliminar registro"
+        message={confirmDelete
+          ? `¿Deseas eliminar “${label(confirmDelete)}”? Esta acción no se puede deshacer.`
+          : ''}
+        confirmText="Sí, eliminar"
+        cancelText="Cancelar"
+        tone="danger"
+        loading={eliminando}
+        onClose={() => !eliminando && setConfirmDelete(null)}
+        onConfirm={confirmarBorrado}
+      />
     </div>
   );
 }
