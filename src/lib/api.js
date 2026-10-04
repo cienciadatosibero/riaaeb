@@ -47,6 +47,7 @@ const crud = (base, listPath='') => ({
 // Admin / rol
 export const adminInvestigaciones = {
   list: () => request('/investigaciones/admin', { auth:true }),
+  personas: () => request('/investigaciones/personas-opciones', { auth:true }),
   create: (d) => request('/investigaciones', { method:'POST', auth:true, body:JSON.stringify(d) }),
   update: (id,d) => request(`/investigaciones/${id}`, { method:'PUT', auth:true, body:JSON.stringify(d) }),
   remove: (id) => request(`/investigaciones/${id}`, { method:'DELETE', auth:true }),
