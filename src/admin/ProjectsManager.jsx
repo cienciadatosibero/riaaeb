@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, FlaskConical, GraduationCap, Loader2, Pencil,
+  AlertTriangle, CheckCircle2, ExternalLink, FlaskConical, GraduationCap, Loader2, Pencil,
   Plus, Save, Search, Trash2, UserMinus, UserPlus, Users, X,
 } from 'lucide-react';
 import {
@@ -23,6 +23,7 @@ const emptyForm = {
   area_id: '',
   tipo_investigacion_id: '',
   estatus: 'en_proceso',
+  enlace: '',
   referencias: '',
   propietario_usuario_id: '',
   profesor_ids: [],
@@ -278,6 +279,16 @@ export default function ProjectsManager({ session }) {
           </select>
         </Field>
 
+        <Field label="Enlace del proyecto (opcional)" full>
+          <input
+            type="url"
+            className={input}
+            value={form.enlace || ''}
+            onChange={(e)=>set('enlace', e.target.value)}
+            placeholder="https://..."
+          />
+        </Field>
+
         {isAdmin ? <Field label="Profesor / investigador responsable">
           <select className={input} value={form.propietario_usuario_id || ''} onChange={(e)=>set('propietario_usuario_id', e.target.value)} required>
             <option value="">Seleccione…</option>
@@ -360,6 +371,7 @@ export default function ProjectsManager({ session }) {
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
+                {p.enlace && <a href={p.enlace} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"><ExternalLink size={14}/>Abrir proyecto</a>}
                 {canManage && <button onClick={()=>beginEdit(p)} className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"><Pencil size={14}/>Editar</button>}
                 {isAdmin && <button onClick={()=>setConfirmDelete(p)} className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-red-200 hover:text-red-600"><Trash2 size={14}/>Eliminar</button>}
                 {isStudent && <button
@@ -418,6 +430,7 @@ function ChoiceGrid({ items, selected, onChange, empty, icon: Icon }) {
             onChange={(e)=>onChange(e.target.checked ? [...new Set([...ids, Number(p.id)])] : ids.filter((x)=>x !== Number(p.id)))}
             className="accent-primary-500"
           />
+          {p.foto_url ? <img src={p.foto_url} alt="" className="h-8 w-8 shrink-0 rounded-full border border-line object-cover"/> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-50 text-[10px] font-700 text-primary-700">{String(p.nombre_completo||'?').trim().split(/\s+/).slice(0,2).map((x)=>x[0]).join('').toUpperCase()}</span>}
           {Icon && <Icon size={14} className="shrink-0 text-primary-500"/>}
           <span className="min-w-0">
             <b className="block truncate font-600 text-ink">{p.nombre_completo}</b>
@@ -434,7 +447,7 @@ function PeopleBlock({ title, icon: Icon, people }) {
     <div className="mb-2 flex items-center gap-2 text-xs font-700 uppercase tracking-wide text-slate-400"><Icon size={14}/>{title}</div>
     {people.length === 0
       ? <p className="text-xs text-slate-400">Ninguno.</p>
-      : <div className="flex flex-wrap gap-1.5">{people.map((x)=><span key={x.usuario_id} className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600">{x.nombre}</span>)}</div>}
+      : <div className="flex flex-wrap gap-1.5">{people.map((x)=><span key={x.usuario_id} className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-1 text-xs text-slate-600">{x.foto_url ? <img src={x.foto_url} alt="" className="h-5 w-5 rounded-full object-cover"/> : <span className="grid h-5 w-5 place-items-center rounded-full bg-primary-50 text-[8px] font-700 text-primary-700">{String(x.nombre||'?').trim().split(/\s+/).slice(0,2).map((n)=>n[0]).join('').toUpperCase()}</span>}{x.nombre}</span>)}</div>}
   </div>;
 }
 

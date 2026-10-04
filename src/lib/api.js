@@ -89,6 +89,8 @@ seguridadModulos.list = () => request('/seguridad/modulos', { auth:true });
 seguridadPermisos.list = () => request('/seguridad/permisos', { auth:true });
 seguridadRoles.list = () => request('/seguridad/roles', { auth:true });
 seguridadUsuarios.list = () => request('/seguridad/usuarios', { auth:true });
+seguridadUsuarios.pendientes = () => request('/seguridad/usuarios/pendientes', { auth:true });
+seguridadUsuarios.aprobar = (id) => request(`/seguridad/usuarios/${id}/aprobar`, { method:'PUT', auth:true });
 
 async function uploadTo(path,file,auth) {
   const fd = new FormData();

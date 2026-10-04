@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   BookOpenCheck,
+  ExternalLink,
   Calendar,
   CircleDot,
   FlaskConical,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import SectionTitle from './ui/SectionTitle.jsx';
 import Portal from './ui/Portal.jsx';
+import PersonaModal from './ui/PersonaModal.jsx';
 import { getInvestigaciones } from '../lib/api.js';
 
 function screenshotURL(url, w = 1280, h = 1000) {
@@ -112,6 +114,8 @@ function Detail({ proyecto, onClose }) {
       ? proyecto.referencias.split(/\r?\n|\|/).map((x) => x.trim()).filter(Boolean)
       : [];
 
+  const [personaActiva, setPersonaActiva] = useState(null);
+
   return (
     <Portal>
       <div className="fixed inset-0 z-[135] flex items-center justify-center p-3 sm:p-6">
@@ -142,6 +146,17 @@ function Detail({ proyecto, onClose }) {
             <h3 className="mt-4 font-display text-2xl font-700 leading-tight text-ink sm:text-3xl">
               {proyecto.titulo}
             </h3>
+            {proyecto.enlace && (
+              <a
+                href={proyecto.enlace}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-shine mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-600 text-white hover:bg-primary-600"
+              >
+                Abrir proyecto
+                <ExternalLink size={15} />
+              </a>
+            )}
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -167,12 +182,8 @@ function Detail({ proyecto, onClose }) {
               <ul className="space-y-2">
                 {(proyecto.profesores || []).length ? (
                   proyecto.profesores.map((persona, i) => (
-                    <li key={persona.usuario_id || persona.id || i} className="flex items-start gap-2">
-                      <Users size={15} className="mt-0.5 shrink-0 text-primary-500" />
-                      <span>
-                        {persona.nombre}
-                        {persona.institucion ? ` · ${persona.institucion}` : ''}
-                      </span>
+                    <li key={persona.usuario_id || persona.id || i}>
+                      <PersonaChip persona={persona} icon={Users} onClick={() => setPersonaActiva(persona)} />
                     </li>
                   ))
                 ) : (
@@ -188,9 +199,8 @@ function Detail({ proyecto, onClose }) {
               <ul className="space-y-2">
                 {(proyecto.estudiantes || []).length ? (
                   proyecto.estudiantes.map((persona, i) => (
-                    <li key={persona.usuario_id || persona.id || i} className="flex items-start gap-2">
-                      <GraduationCap size={15} className="mt-0.5 shrink-0 text-primary-500" />
-                      <span>{persona.nombre}</span>
+                    <li key={persona.usuario_id || persona.id || i}>
+                      <PersonaChip persona={persona} icon={GraduationCap} onClick={() => setPersonaActiva(persona)} />
                     </li>
                   ))
                 ) : (
@@ -212,8 +222,32 @@ function Detail({ proyecto, onClose }) {
             </DetailBlock>
           </div>
         </div>
+        {personaActiva && <PersonaModal persona={personaActiva} onClose={() => setPersonaActiva(null)} />}
       </div>
     </Portal>
+  );
+}
+
+function PersonaChip({ persona, icon: Icon, onClick }) {
+  const iniciales = String(persona?.nombre || '?').trim().split(/\s+/).slice(0,2).map((x)=>x[0]).join('').toUpperCase();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group/person flex w-full items-center gap-3 rounded-xl border border-transparent bg-white px-3 py-2 text-left shadow-sm transition hover:border-primary-200 hover:bg-primary-50/50"
+      title={`Ver perfil de ${persona?.nombre || 'persona'}`}
+    >
+      {persona?.foto_url ? (
+        <img src={persona.foto_url} alt="" className="h-10 w-10 shrink-0 rounded-full border border-line object-cover" />
+      ) : (
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-100 text-xs font-700 text-primary-700">{iniciales}</span>
+      )}
+      <span className="min-w-0 flex-1">
+        <b className="block truncate font-600 text-ink group-hover/person:text-primary-700">{persona?.nombre}</b>
+        <span className="block truncate text-[11px] text-slate-400">{persona?.institucion || (persona?.tipo_perfil === 'estudiante' ? 'Estudiante de la Red' : 'Investigador de la Red')}</span>
+      </span>
+      <Icon size={15} className="shrink-0 text-primary-500" />
+    </button>
   );
 }
 

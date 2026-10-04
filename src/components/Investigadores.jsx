@@ -1,9 +1,9 @@
 // frontend/src/components/Investigadores.jsx
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUpRight, Users, X, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpRight, Users } from 'lucide-react';
 import SectionTitle from './ui/SectionTitle.jsx';
-import Portal from './ui/Portal.jsx';
 import { getInvestigadores } from '../lib/api.js';
+import PersonaModal from './ui/PersonaModal.jsx';
 
 /* Tarjeta del carrusel. */
 function Card({ p, frente, onAbrir }) {
@@ -13,11 +13,17 @@ function Card({ p, frente, onAbrir }) {
         ${frente ? 'border-primary-300' : 'border-line'}`}
     >
       <div className="relative h-[62%] overflow-hidden">
-        <img
-          src={p.foto_url}
-          alt={p.nombre}
-          className={`h-full w-full object-cover transition-transform duration-700 ${frente ? 'scale-100' : 'scale-105'}`}
-        />
+        {p.foto_url ? (
+          <img
+            src={p.foto_url}
+            alt={p.nombre}
+            className={`h-full w-full object-cover transition-transform duration-700 ${frente ? 'scale-100' : 'scale-105'}`}
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary-500 to-primary-700 text-5xl font-700 text-white">
+            {String(p.nombre || '?').trim().split(/\s+/).slice(0,2).map((x)=>x[0]).join('').toUpperCase()}
+          </div>
+        )}
         <div className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${frente ? 'opacity-100' : 'opacity-0'}`}>
           <div className="absolute inset-0 bg-gradient-to-t from-primary-600/30 via-transparent to-transparent" />
         </div>
@@ -48,76 +54,6 @@ function Card({ p, frente, onAbrir }) {
         </div>
       </div>
     </article>
-  );
-}
-
-/* Modal de perfil: foto a la izquierda, información a la derecha. */
-function Modal({ p, onClose, onPrev, onNext }) {
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft') onPrev();
-      if (e.key === 'ArrowRight') onNext();
-    };
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
-  }, [onClose, onPrev, onNext]);
-
-  return (
-    <Portal>
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-      <div className="animate-overlay-in absolute inset-0 bg-ink/55 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Flechas laterales */}
-      <button onClick={onPrev} aria-label="Anterior"
-        className="absolute left-4 z-10 grid h-12 w-12 place-items-center rounded-full border border-line bg-white/90 text-slate-600 shadow-lg backdrop-blur transition-all hover:border-primary-400 hover:text-primary-600 sm:left-8">
-        <ChevronLeft size={20} />
-      </button>
-      <button onClick={onNext} aria-label="Siguiente"
-        className="absolute right-4 z-10 grid h-12 w-12 place-items-center rounded-full bg-primary-500 text-white shadow-lg transition-all hover:bg-primary-600 sm:right-8">
-        <ChevronRight size={20} />
-      </button>
-
-      <div className="animate-modal-in relative z-[1] flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-lift sm:flex-row">
-        {/* Foto (izquierda) */}
-        <div className="relative h-56 w-full shrink-0 overflow-hidden sm:h-auto sm:w-2/5">
-          <img src={p.foto_url} alt={p.nombre} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary-700/50 via-transparent to-transparent" />
-          <div className="absolute bottom-4 left-4 right-4">
-            <h3 className="font-display text-xl font-700 leading-tight text-white drop-shadow">{p.nombre}</h3>
-            <p className="mt-0.5 text-sm text-white/85">{p.rol}</p>
-          </div>
-        </div>
-
-        {/* Información (derecha) */}
-        <div className="relative flex max-h-[70vh] flex-1 flex-col overflow-y-auto p-7">
-          <button onClick={onClose} aria-label="Cerrar"
-            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg border border-line bg-soft text-slate-500 transition-colors hover:border-primary-400 hover:text-primary-600">
-            <X size={18} />
-          </button>
-
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-500">{p.categoria_red || (p.tipo_perfil === 'estudiante' ? 'Estudiante de la Red' : 'Investigador de la Red')}</p>
-          {p.area && <p className="mt-2 inline-flex w-fit rounded-full bg-primary-50 px-3 py-1 text-xs font-600 text-primary-700">{p.area}</p>}
-
-          <p className="mt-4 text-sm leading-relaxed text-slate-600">{p.bio}</p>
-
-          <div className="mt-6 space-y-2 border-t border-line pt-4 text-sm text-slate-500">
-            {p.institucion && (
-              <p className="flex items-center gap-2"><Users size={15} className="text-primary-400" /> {p.institucion}</p>
-            )}
-          </div>
-
-          {p.enlace && (
-            <a href={p.enlace} target="_blank" rel="noopener noreferrer"
-              className="btn-shine mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-400 px-6 py-3 text-sm font-600 text-white transition-all hover:-translate-y-0.5">
-              Ver perfil completo <ExternalLink size={15} />
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-    </Portal>
   );
 }
 
@@ -260,12 +196,7 @@ export default function Investigadores() {
       </div>
 
       {modal !== null && personas[modal] && (
-        <Modal
-          p={personas[modal]}
-          onClose={() => setModal(null)}
-          onPrev={() => setModal((m) => (m - 1 + n) % n)}
-          onNext={() => setModal((m) => (m + 1) % n)}
-        />
+        <PersonaModal persona={personas[modal]} onClose={() => setModal(null)} />
       )}
     </section>
   );

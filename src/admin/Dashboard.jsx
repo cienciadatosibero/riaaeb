@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   LayoutDashboard, FlaskConical, BookOpen, Building2, Shapes, Tags, Newspaper, Info, ShieldCheck,
   Puzzle, KeyRound, UserCog, Users, LogOut, ExternalLink, Menu, X, ChevronDown, ChevronRight, UserRound,
-  ContactRound, Home, UserSearch,
+  ContactRound, Home, UserSearch, Clock3,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LogoMark from '../components/ui/LogoMark.jsx';
@@ -14,6 +14,7 @@ import ProjectsManager from './ProjectsManager.jsx';
 import ProfileEditor from './ProfileEditor.jsx';
 import PortadaEditor from './PortadaEditor.jsx';
 import ContactMessages from './ContactMessages.jsx';
+import PendingUsers from './PendingUsers.jsx';
 import {
   adminNoticias, adminInstituciones, adminAreas, adminTiposInvestigacion, adminAreasInvestigacion, adminPublicaciones, adminInvestigadores,
   seguridadModulos, seguridadPermisos, seguridadRoles, seguridadUsuarios,
@@ -71,6 +72,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     {id:'modulos',label:'Módulos',icon:Puzzle,show:can('seguridad_modulos','lectura')},
     {id:'permisos',label:'Permisos',icon:KeyRound,show:can('seguridad_permisos','lectura')},
     {id:'roles',label:'Roles',icon:UserCog,show:can('seguridad_roles','lectura')},
+    {id:'usuariosPendientes',label:'Usuarios por confirmar',icon:Clock3,show:can('seguridad_usuarios','lectura')},
     {id:'usuarios',label:'Usuarios',icon:Users,show:can('seguridad_usuarios','lectura')},
   ];
 
@@ -98,6 +100,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     {name:'publicado',label:'Visible en la parte pública',type:'checkbox',defaultValue:true},
   ];
   const personFields=useMemo(()=>[
+    {name:'tipo_perfil',type:'hidden'},
     {name:'nombre',label:'Nombre completo',type:'text',required:true,full:true},
     {name:'rol',label:'Cargo / función pública',type:'text',defaultValue:''},
     {name:'correo_institucional',label:'Correo institucional',type:'email'},
@@ -105,17 +108,18 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     {name:'area_ids',label:'Áreas de conocimiento (una o más)',type:'multiselect',full:true,options:deps.areas.map((x)=>({value:x.id,label:x.nombre}))},
     {name:'institucion_id',label:'Institución de adscripción',type:'select',options:deps.instituciones.map((x)=>({value:x.id,label:x.nombre}))},
     {name:'bio',label:'Semblanza',type:'textarea',maxLength:600,full:true},
-    {name:'nivel_snii',label:'Nivel del SNII',type:'select',options:sniiOptions},
+    {name:'nivel_snii',label:'Nivel del SNII',type:'select',options:sniiOptions,showWhen:(f)=>f.tipo_perfil!=='estudiante'},
     {name:'grado_maximo',label:'Grado máximo de estudios',type:'select',options:gradoOptions},
     {name:'linea_investigacion',label:'Línea de investigación',type:'text',full:true},
     {name:'foto_url',label:'Foto',type:'file'},
     {name:'logo_institucion_url',label:'Logo institución (opcional)',type:'file'},
     {name:'orcid',label:'ORCID',type:'url'},
-    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.'},
+    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.',showWhen:(f)=>f.tipo_perfil!=='estudiante'},
     {name:'orden',label:'Orden en la portada',type:'number',defaultValue:0},
     {name:'activo',label:'Visible en la parte pública',type:'checkbox',defaultValue:true,full:true},
   ],[deps.areas,deps.instituciones]);
 
+  const investigadorRoleId=deps.roles.find((r)=>String(r.clave).toLowerCase()==='investigador')?.id;
   const userFields=useMemo(()=>[
     {name:'nombre_completo',label:'Nombre completo',type:'text',required:true,full:true},
     {name:'correo',label:'Correo institucional',type:'email',required:true},
@@ -126,13 +130,13 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
     {name:'area_ids',label:'Áreas de conocimiento (una o más)',type:'multiselect',full:true,options:deps.areas.map((x)=>({value:x.id,label:x.nombre}))},
     {name:'institucion_id',label:'Institución de adscripción',type:'select',options:deps.instituciones.map((x)=>({value:x.id,label:x.nombre}))},
     {name:'grado_maximo',label:'Grado máximo de estudios',type:'select',options:gradoOptions},
-    {name:'nivel_snii',label:'Nivel del SNII',type:'select',options:sniiOptions},
+    {name:'nivel_snii',label:'Nivel del SNII',type:'select',options:sniiOptions,showWhen:(f)=>(f.role_ids||[]).map(Number).includes(Number(investigadorRoleId))},
     {name:'linea_investigacion',label:'Línea de investigación',type:'text',full:true},
     {name:'semblanza',label:'Semblanza',type:'textarea',maxLength:600,full:true},
     {name:'foto_url',label:'Foto',type:'file'},
     {name:'logo_institucion_url',label:'Logo institución (opcional)',type:'file'},
     {name:'orcid',label:'ORCID',type:'url'},
-    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.'},
+    {name:'cvu_rizoma',label:'CVU Rizoma',type:'text',maxLength:7,digitsOnly:true,pattern:'[0-9]{7}',inputMode:'numeric',help:'Identificador de 7 dígitos. No es una URL.',showWhen:(f)=>(f.role_ids||[]).map(Number).includes(Number(investigadorRoleId))},
     {name:'activo',label:'Cuenta activa / aprobada',type:'checkbox',defaultValue:true,full:true},
   ],[deps]);
 
@@ -172,6 +176,7 @@ export default function Dashboard({ session, onSessionChange, onRefreshSession, 
       {name:'modulo_id',label:'Módulo',type:'select',required:true,options:deps.modules.map((x)=>({value:x.id,label:x.nombre}))},{name:'accion',label:'Permiso',type:'select',required:true,options:['lectura','escritura','actualizar','eliminar'].map((x)=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Permisos de lectura, escritura, actualización y eliminación asociados a cada módulo."/>;
     if(tab==='roles') return <ResourceManager titulo="Seguridad · Roles" api={seguridadRoles} label={(i)=>i.nombre} canCreate={can('seguridad_roles','escritura')} canEdit={can('seguridad_roles','actualizar')} canDelete={can('seguridad_roles','eliminar')} fields={[
       {name:'clave',label:'Clave',type:'text',required:true},{name:'nombre',label:'Nombre',type:'text',required:true},{name:'descripcion',label:'Descripción',type:'textarea',full:true},{name:'permiso_ids',label:'Permisos asociados',type:'duallist',full:true,options:deps.permissions.map((x)=>({value:x.id,label:`${x.modulo} · ${x.accion}`}))},{name:'activo',label:'Activo',type:'checkbox',defaultValue:true}]} subtitle="Cada rol controla qué opciones y acciones puede visualizar y utilizar."/>;
+    if(tab==='usuariosPendientes') return <PendingUsers canApprove={can('seguridad_usuarios','actualizar')} canDelete={can('seguridad_usuarios','eliminar')}/>;
     if(tab==='usuarios') return <ResourceManager titulo="Seguridad · Usuarios" api={seguridadUsuarios} label={(i)=>`${i.nombre_completo}${i.activo?'':' · PENDIENTE DE ACTIVACIÓN'}`} fields={userFields} canCreate={can('seguridad_usuarios','escritura')} canEdit={can('seguridad_usuarios','actualizar')} canDelete={can('seguridad_usuarios','eliminar')} subtitle="Activa registros públicos, asigna uno o más roles y administra el perfil de investigadores y estudiantes."/>;
     return null;
   };

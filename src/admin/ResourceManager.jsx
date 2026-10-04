@@ -316,7 +316,7 @@ export default function ResourceManager({ titulo, api, fields, label, subtitle, 
             <button type="button" onClick={cancelar} className="grid h-9 w-9 place-items-center rounded-xl border border-line text-slate-500 hover:text-primary-600"><X size={17}/></button>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {fields.filter((f)=>f.type!=='hidden').map((f) => (
+            {fields.filter((f)=>f.type!=='hidden' && (!f.showWhen || f.showWhen(form))).map((f) => (
               <div key={f.name} className={f.full ? 'md:col-span-2' : ''}>
                 {f.type === 'file' ? (
                   <FileField label={f.label} value={form[f.name]} onChange={(v)=>set(f.name,v)} />
