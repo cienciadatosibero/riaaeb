@@ -18,28 +18,28 @@ import Portal from './ui/Portal.jsx';
 import PersonaModal from './ui/PersonaModal.jsx';
 import { getInvestigaciones } from '../lib/api.js';
 
+function normalizarEnlace(valor) {
+  const v = String(valor ?? '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
 function screenshotURL(url, w = 1280, h = 1000) {
   if (!url) return '';
-  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url.trim())}?w=${w}&h=${h}`;
+  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(normalizarEnlace(url))}?w=${w}&h=${h}`;
 }
 
 function hostDe(url) {
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    return new URL(normalizarEnlace(url)).hostname.replace(/^www\./, '');
   } catch {
     return url || '';
   }
 }
 
 function Preview({ proyecto }) {
-  const normalizarEnlace = (valor) => {
-  const v = String(valor ?? '').trim();
-  if (!v) return '';
-  if (/^https?:\/\//i.test(v)) return v;
-  return `https://${v}`;
-};
-
-const src = useMemo(() => screenshotURL(proyecto.enlace), [proyecto.enlace]);
+  const src = useMemo(() => screenshotURL(proyecto.enlace), [proyecto.enlace]);
   const [estado, setEstado] = useState(src ? 'cargando' : 'sin-imagen');
   const [intentos, setIntentos] = useState(0);
   const imgRef = useRef(null);
