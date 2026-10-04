@@ -32,7 +32,14 @@ function hostDe(url) {
 }
 
 function Preview({ proyecto }) {
-  const src = useMemo(() => screenshotURL(proyecto.enlace), [proyecto.enlace]);
+  const normalizarEnlace = (valor) => {
+  const v = String(valor ?? '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+};
+
+const src = useMemo(() => screenshotURL(proyecto.enlace), [proyecto.enlace]);
   const [estado, setEstado] = useState(src ? 'cargando' : 'sin-imagen');
   const [intentos, setIntentos] = useState(0);
   const imgRef = useRef(null);
@@ -148,7 +155,7 @@ function Detail({ proyecto, onClose }) {
             </h3>
             {proyecto.enlace && (
               <a
-                href={proyecto.enlace}
+                href={normalizarEnlace(proyecto.enlace)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-shine mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-600 text-white hover:bg-primary-600"

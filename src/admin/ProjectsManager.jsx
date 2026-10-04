@@ -33,6 +33,14 @@ const emptyForm = {
 
 const norm = (v) => String(v ?? '').trim().toLowerCase();
 
+const normalizarEnlace = (valor) => {
+  const v = String(valor ?? '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+};
+
+
 export default function ProjectsManager({ session }) {
   const roles = (session?.roles || []).map(norm);
   const isAdmin = roles.includes('administrador');
@@ -129,6 +137,7 @@ export default function ProjectsManager({ session }) {
 
       const payload = {
         ...form,
+        enlace: normalizarEnlace(form.enlace),
         area_id: Number(form.area_id) || null,
         tipo_investigacion_id: Number(form.tipo_investigacion_id) || null,
         propietario_usuario_id: isAdmin ? (Number(form.propietario_usuario_id) || null) : session?.id,
@@ -279,14 +288,31 @@ export default function ProjectsManager({ session }) {
           </select>
         </Field>
 
-        <Field label="Enlace del proyecto (opcional)" full>
-          <input
-            type="url"
-            className={input}
-            value={form.enlace || ''}
-            onChange={(e)=>set('enlace', e.target.value)}
-            placeholder="https://..."
-          />
+        <Field label="Enlace externo del proyecto (opcional)" full>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              inputMode="url"
+              className={input}
+              value={form.enlace || ''}
+              onChange={(e)=>set('enlace', e.target.value)}
+              onBlur={(e)=>set('enlace', normalizarEnlace(e.target.value))}
+              placeholder="ejemplo.com/proyecto o https://ejemplo.com/proyecto"
+            />
+            {form.enlace && (
+              <a
+                href={normalizarEnlace(form.enlace)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"
+              >
+                <ExternalLink size={15}/> Probar
+              </a>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Se puede editar en cualquier momento. Si escribes el dominio sin https://, el sistema lo agrega automáticamente.
+          </p>
         </Field>
 
         {isAdmin ? <Field label="Profesor / investigador responsable">
@@ -371,7 +397,7 @@ export default function ProjectsManager({ session }) {
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
-                {p.enlace && <a href={p.enlace} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"><ExternalLink size={14}/>Abrir proyecto</a>}
+                {p.enlace && <a href={normalizarEnlace(p.enlace)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"><ExternalLink size={14}/>Abrir proyecto</a>}
                 {canManage && <button onClick={()=>beginEdit(p)} className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-primary-300 hover:text-primary-600"><Pencil size={14}/>Editar</button>}
                 {isAdmin && <button onClick={()=>setConfirmDelete(p)} className="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-600 text-slate-600 hover:border-red-200 hover:text-red-600"><Trash2 size={14}/>Eliminar</button>}
                 {isStudent && <button
