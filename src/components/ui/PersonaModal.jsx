@@ -145,17 +145,13 @@ export default function PersonaModal({ persona, onClose }) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               {!esEstudiante && persona.cvu_rizoma && (
-                <a
-                  href="https://rizoma.conahcyt.mx/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-shine inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-600 text-white hover:bg-primary-600"
+                <div
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2.5 text-sm font-600 text-primary-700"
                   title={`CVU ${persona.cvu_rizoma}`}
                 >
                   <BookOpenCheck size={16} />
-                  Ver CVU Rizoma · {persona.cvu_rizoma}
-                  <ExternalLink size={14} />
-                </a>
+                  CVU Rizoma · {persona.cvu_rizoma}
+                </div>
               )}
 
               {orcidUrl && (
